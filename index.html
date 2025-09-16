@@ -3,243 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Serviços Públicos - Mapa de Recursos</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <title>Central de Serviços Públicos - Franca/SP</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-geocoding@2.4.0/dist/Control.Geocoder.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-geocoding@2.4.0/dist/Control.Geocoder.css" />
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            overflow-x: hidden;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
         }
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
-            position: relative;
-            z-index: 10;
         }
-        .header {
-            text-align: center;
+        header {
+            background: linear-gradient(135deg, #1e5799, #207cca);
             color: white;
-            margin-bottom: 30px;
+            padding: 20px 0;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
-        .header h1 {
+        h1 {
             font-size: 2.5rem;
             margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
-        .header p {
+        .subtitle {
             font-size: 1.2rem;
-            opacity: 0.9;
-        }
-        .main-content {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
-            position: relative;
-            z-index: 5;
-        }
-        .tabs {
-            display: flex;
-            background: #f8f9fa;
-            border-bottom: 1px solid #dee2e6;
-        }
-        .tab {
-            flex: 1;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: none;
-            background: none;
-            font-size: 1rem;
-            font-weight: 600;
-        }
-        .tab.active {
-            background: white;
-            color: #667eea;
-            border-bottom: 3px solid #667eea;
-        }
-        .tab:hover:not(.active) {
-            background: #e9ecef;
-        }
-        .content {
-            padding: 30px;
+            font-weight: 300;
         }
         .search-section {
-            margin-bottom: 30px;
-        }
-        .search-container {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        .search-input {
-            flex: 1;
-            min-width: 200px;
-            padding: 15px;
-            border: 2px solid #e9ecef;
-            border-radius: 10px;
-            font-size: 1rem;
-            transition: border-color 0.3s ease;
-        }
-        .search-input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        .btn {
-            padding: 15px 25px;
-            border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .btn-primary {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-        }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-        .btn-location {
-            background: #17a2b8;
-            color: white;
-        }
-        .location-info {
-            background: #e7f3ff;
-            border: 1px solid #b3d7ff;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 20px;
-            display: none;
-        }
-        .location-info.show {
-            display: block;
-        }
-        .map-container {
-            height: 100vh;
-            width: 100vw;
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: -1;
-            border: none;
-            border-radius: 0;
-        }
-        #map {
-            width: 100%;
-            height: 100%;
-            min-height: 100vh;
-        }
-        .services-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-        .service-card {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 20px;
-            border-left: 4px solid #667eea;
-            transition: transform 0.3s ease;
-        }
-        .service-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        }
-        .service-card h3 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 1.2rem;
-        }
-        .service-card p {
-            color: #666;
-            line-height: 1.6;
-            margin-bottom: 15px;
-        }
-        .service-info {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 10px;
-            font-size: 0.9rem;
-        }
-        .service-info div {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .service-info i {
-            color: #667eea;
-            width: 16px;
-        }
-        .admin-panel {
-            display: none;
-        }
-        .admin-panel.show {
-            display: block;
-        }
-        .login-form {
-            max-width: 400px;
-            margin: 0 auto;
-            background: #f8f9fa;
+            background-color: white;
             padding: 30px;
-            border-radius: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin: 30px 0;
         }
         .form-group {
             margin-bottom: 20px;
         }
-        .form-group label {
+        label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
             font-weight: 600;
-            color: #333;
+            color: #444;
         }
-        .form-control {
+        select, input {
             width: 100%;
             padding: 12px;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.3s ease;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
         }
-        .form-control:focus {
+        select:focus, input:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #207cca;
         }
-        textarea.form-control {
-            resize: vertical;
-            min-height: 100px;
+        button {
+            background: linear-gradient(135deg, #1e5799, #207cca);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
         }
-        .admin-content {
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(32, 124, 202, 0.3);
+        }
+        .map-toggle {
+            background: linear-gradient(135deg, #2e7d32, #4caf50);
+        }
+        .map-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        }
+        .results {
+            margin-top: 30px;
+        }
+        .service-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+        .service-card:hover {
+            transform: translateY(-5px);
+        }
+        .service-title {
+            color: #1e5799;
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+        }
+        .service-category {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+        .service-info {
+            margin-bottom: 15px;
+        }
+        .service-info p {
+            margin-bottom: 8px;
+        }
+        .contact-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        .contact-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #444;
+        }
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .admin-login {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+        .admin-title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #1e5799;
+        }
+        .admin-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .error-message {
+            color: #d32f2f;
+            background-color: #ffebee;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
             display: none;
         }
-        .admin-content.show {
-            display: block;
+        .admin-panel {
+            display: none;
         }
         .admin-header {
             display: flex;
@@ -247,242 +178,328 @@
             align-items: center;
             margin-bottom: 30px;
             padding-bottom: 15px;
-            border-bottom: 2px solid #e9ecef;
+            border-bottom: 2px solid #e3f2fd;
         }
-        .admin-tabs {
-            display: flex;
-            gap: 10px;
+        .logout-btn {
+            background: #d32f2f;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        .add-service-form {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
             margin-bottom: 20px;
         }
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            min-height: 100px;
+            resize: vertical;
+        }
         .services-list {
-            background: #f8f9fa;
+            background-color: white;
             border-radius: 10px;
             padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
-        .service-item {
-            background: white;
-            border-radius: 8px;
+        .service-list-item {
             padding: 15px;
-            margin-bottom: 10px;
+            border-bottom: 1px solid #eee;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .service-list-item:last-child {
+            border-bottom: none;
         }
         .service-actions {
             display: flex;
             gap: 10px;
         }
-        .btn-small {
-            padding: 8px 12px;
-            font-size: 0.9rem;
+        .edit-btn, .delete-btn {
+            padding: 6px 12px;
+            font-size: 14px;
         }
-        .btn-danger {
-            background: #dc3545;
-            color: white;
+        .edit-btn {
+            background: #ffa726;
         }
-        .btn-warning {
-            background: #ffc107;
-            color: #212529;
+        .delete-btn {
+            background: #d32f2f;
         }
         .loading {
             text-align: center;
-            padding: 20px;
-        }
-        .loading i {
-            font-size: 2rem;
-            color: #667eea;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .no-results {
-            text-align: center;
             padding: 40px;
+            font-size: 1.2rem;
             color: #666;
         }
-        .no-results i {
-            font-size: 3rem;
-            margin-bottom: 15px;
-            color: #ccc;
+        #map-container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin: 30px 0;
+            display: none;
         }
-        @media(max-width: 768px) {
-            .header h1 {
+        #map {
+            height: 500px;
+            width: 100%;
+            border-radius: 10px;
+        }
+        .legend {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            max-height: 200px;
+            overflow-y: auto;
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            width: 200px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+            font-size: 12px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 50px;
+        }
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            h1 {
                 font-size: 2rem;
             }
-            .search-container {
-                flex-direction: column;
-            }
-            .search-input {
-                min-width: 100%;
-            }
-            .services-grid {
-                grid-template-columns: 1fr;
-            }
-            .service-info {
-                grid-template-columns: 1fr;
-            }
-            .admin-header {
-                flex-direction: column;
-                gap: 15px;
-                text-align: center;
+            #map {
+                height: 300px;
             }
         }
     </style>
 </head>
 <body>
+    <header>
+        <div class="container">
+            <h1>Central de Serviços Públicos - Franca/SP</h1>
+            <p class="subtitle">Encontre serviços, programas e equipamentos públicos no seu bairro</p>
+        </div>
+    </header>
+
     <div class="container">
-        <header class="header">
-            <h1><i class="fas fa-map-marked-alt"></i> Mapa de Serviços Públicos</h1>
-            <p>Encontre os recursos e serviços disponíveis em sua região</p>
-        </header>
-        <div class="main-content">
-            <div class="tabs">
-                <button class="tab active" onclick="switchTab('public')">
-                    <i class="fas fa-search"></i> Consultar Serviços
-                </button>
-                <button class="tab" onclick="switchTab('map')">
-                    <i class="fas fa-map"></i> Mapa Interativo
-                </button>
+        <!-- Public Interface -->
+        <div id="public-interface">
+            <section class="search-section">
+                <h2>Encontre serviços no seu bairro</h2>
+                <div class="form-group">
+                    <label for="neighborhood">Selecione seu bairro:</label>
+                    <select id="neighborhood" name="neighborhood">
+                        <option value="">-- Selecione um bairro --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="service-type">Tipo de serviço (opcional):</label>
+                    <select id="service-type" name="service-type">
+                        <option value="">Todos os serviços</option>
+                        <option value="saude">Saúde</option>
+                        <option value="educacao">Educação</option>
+                        <option value="assistencia-social">Assistência Social</option>
+                        <option value="cultura">Cultura</option>
+                        <option value="esporte">Esporte e Lazer</option>
+                        <option value="seguranca">Segurança</option>
+                        <option value="meio-ambiente">Meio Ambiente</option>
+                        <option value="transporte">Transporte</option>
+                        <option value="outros">Outros</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <button id="search-btn">Buscar Serviços</button>
+                    <button id="map-toggle" class="map-toggle">Mostrar Mapa Interativo</button>
+                </div>
+            </section>
+
+            <div id="loading" class="loading" style="display: none;">
+                Carregando serviços...
             </div>
-            <div class="content">
-                <!-- Painel Público -->
-                <div id="public-tab" class="tab-content">
-                    <div class="search-section">
-                        <div class="search-container">
-                            <input type="text" id="neighborhood-search" class="search-input" placeholder="Digite o nome do seu bairro...">
-                            <button class="btn btn-primary" onclick="searchServices()">
-                                <i class="fas fa-search"></i> Buscar
-                            </button>
-                            <button class="btn btn-location" onclick="getCurrentLocation()">
-                                <i class="fas fa-location-arrow"></i> Usar Localização
-                            </button>
-                        </div>
-                        <div id="location-info" class="location-info">
-                            <i class="fas fa-map-marker-alt"></i> <span id="current-location-text"></span>
-                        </div>
+
+            <div id="map-container">
+                <h2>Mapa Interativo de Serviços - Franca/SP</h2>
+                <div id="map"></div>
+                <div class="legend" id="map-legend">
+                    <h4>Legenda:</h4>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #4CAF50;">🏥</div>
+                        <span>Saúde</span>
                     </div>
-                    <div id="services-results">
-                        <div class="no-results">
-                            <i class="fas fa-search"></i>
-                            <h3>Digite o nome do seu bairro para encontrar os serviços disponíveis</h3>
-                            <p>Use a busca acima ou clique em "Usar Localização" para encontrar automaticamente os recursos próximos a você.</p>
-                        </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #2196F3;">🏫</div>
+                        <span>Educação</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #FF9800;">🤝</div>
+                        <span>Assistência Social</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #9C27B0;">🎭</div>
+                        <span>Cultura</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #E91E63;">⚽</div>
+                        <span>Esporte e Lazer</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #F44336;">👮</div>
+                        <span>Segurança</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #8BC34A;">🌳</div>
+                        <span>Meio Ambiente</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #607D8B;">🚌</div>
+                        <span>Transporte</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #795548;">📌</div>
+                        <span>Outros</span>
                     </div>
                 </div>
-                <!-- Mapa Interativo -->
-                <div id="map-tab" class="tab-content" style="display: none;">
-                    <div class="map-container">
-                        <div id="map"></div>
-                    </div>
-                    <div id="map-services">
-                        <h3>Serviços no Mapa</h3>
-                        <p>Clique nos marcadores do mapa para ver informações detalhadas dos serviços.</p>
-                    </div>
+                <div style="margin-top: 15px; font-size: 14px; color: #666;">
+                    <p>• Clique nos marcadores para ver detalhes dos serviços</p>
+                    <p>• Os marcadores são coloridos de acordo com a categoria do serviço</p>
+                    <p>• Use os filtros acima para encontrar serviços específicos</p>
+                    <p>• Toque nos marcadores em dispositivos móveis para ver informações</p>
                 </div>
-                <!-- Painel Administrativo -->
-                <div id="admin-panel" class="admin-panel">
-                    <div id="admin-login">
-                        <div class="login-form">
-                            <h2 style="text-align: center; margin-bottom: 20px;">Acesso Administrativo</h2>
-                            <div class="form-group">
-                                <label for="admin-password">Senha de acesso:</label>
-                                <input type="password" id="admin-password" class="form-control" placeholder="Digite a senha...">
-                            </div>
-                            <button class="btn btn-primary" style="width: 100%;" onclick="adminLogin()">
-                                <i class="fas fa-sign-in-alt"></i> Entrar
-                            </button>
+            </div>
+
+            <div id="results" class="results">
+                <!-- Results will be displayed here -->
+            </div>
+        </div>
+
+        <!-- Admin Login -->
+        <div id="admin-login" style="display: none;">
+            <div class="admin-login">
+                <h2 class="admin-title">Painel Administrativo</h2>
+                <div id="error-message" class="error-message"></div>
+                <form id="login-form" class="admin-form">
+                    <div class="form-group">
+                        <label for="admin-password">Senha de Acesso:</label>
+                        <input type="password" id="admin-password" name="admin-password" required>
+                    </div>
+                    <button type="submit">Entrar</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Admin Panel -->
+        <div id="admin-panel" class="admin-panel">
+            <div class="admin-header">
+                <h2>Gerenciamento de Serviços</h2>
+                <button id="logout-btn" class="logout-btn">Sair</button>
+            </div>
+
+            <div class="add-service-form">
+                <h3>Adicionar Novo Serviço</h3>
+                <form id="service-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="service-name">Nome do Serviço/Equipamento:</label>
+                            <input type="text" id="service-name" name="service-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="service-category">Categoria:</label>
+                            <select id="service-category" name="service-category" required>
+                                <option value="">-- Selecione uma categoria --</option>
+                                <option value="saude">Saúde</option>
+                                <option value="educacao">Educação</option>
+                                <option value="assistencia-social">Assistência Social</option>
+                                <option value="cultura">Cultura</option>
+                                <option value="esporte">Esporte e Lazer</option>
+                                <option value="seguranca">Segurança</option>
+                                <option value="meio-ambiente">Meio Ambiente</option>
+                                <option value="transporte">Transporte</option>
+                                <option value="outros">Outros</option>
+                            </select>
                         </div>
                     </div>
-                    <div id="admin-content" class="admin-content">
-                        <div class="admin-header">
-                            <h2>Painel Administrativo</h2>
-                            <button class="btn btn-secondary" onclick="adminLogout()">
-                                <i class="fas fa-sign-out-alt"></i> Sair
-                            </button>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="service-neighborhood">Bairro:</label>
+                            <input type="text" id="service-neighborhood" name="service-neighborhood" required>
                         </div>
-                        <div class="admin-tabs">
-                            <button class="btn btn-primary" onclick="showAddService()">
-                                <i class="fas fa-plus"></i> Adicionar Serviço
-                            </button>
-                            <button class="btn btn-secondary" onclick="showServicesList()">
-                                <i class="fas fa-list"></i> Listar Serviços
-                            </button>
-                        </div>
-                        <div id="add-service-form" style="display: none;">
-                            <h3>Adicionar Novo Serviço</h3>
-                            <form id="service-form">
-                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
-                                    <div class="form-group">
-                                        <label for="service-name">Nome do Serviço/Órgão:</label>
-                                        <input type="text" id="service-name" class="form-control" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="service-type">Tipo/Categoria:</label>
-                                        <select id="service-type" class="form-control" required>
-                                            <option value="">Selecione...</option>
-                                            <option value="saude">Saúde</option>
-                                            <option value="educacao">Educação</option>
-                                            <option value="assistencia-social">Assistência Social</option>
-                                            <option value="habitacao">Habitação</option>
-                                            <option value="trabalho">Trabalho e Renda</option>
-                                            <option value="cultura">Cultura</option>
-                                            <option value="esporte">Esporte</option>
-                                            <option value="juridico">Jurídico</option>
-                                            <option value="transporte">Transporte</option>
-                                            <option value="outro">Outro</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="service-neighborhood">Bairro:</label>
-                                        <input type="text" id="service-neighborhood" class="form-control" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="service-address">Endereço Completo:</label>
-                                        <input type="text" id="service-address" class="form-control" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="service-phone">Telefone:</label>
-                                        <input type="tel" id="service-phone" class="form-control">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="service-hours">Horário de Funcionamento:</label>
-                                        <input type="text" id="service-hours" class="form-control" placeholder="Ex: Seg-Sex 8h às 17h">
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label for="service-description">Descrição Detalhada:</label>
-                                    <textarea id="service-description" class="form-control" rows="4" placeholder="Descreva os serviços oferecidos, requisitos, documentos necessários, etc."></textarea>
-                                </div>
-                                <div class="form-group">
-                                    <label for="service-requirements">Documentos/Requisitos:</label>
-                                    <textarea id="service-requirements" class="form-control" rows="3" placeholder="Liste os documentos necessários e requisitos para acesso ao serviço"></textarea>
-                                </div>
-                                <button type="submit" class="btn btn-success">
-                                    <i class="fas fa-save"></i> Salvar Serviço
-                                </button>
-                            </form>
-                        </div>
-                        <div id="services-list" class="services-list" style="display: none;">
-                            <h3>Serviços Cadastrados</h3>
-                            <div id="admin-services-container"></div>
+                        <div class="form-group">
+                            <label for="service-address">Endereço (Ex: Rua XV de Novembro, 123, Franca-SP):</label>
+                            <input type="text" id="service-address" name="service-address" required>
                         </div>
                     </div>
+                    <div class="form-group">
+                        <label for="service-description">Descrição (em linguagem simples):</label>
+                        <textarea id="service-description" name="service-description" required></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="service-phone">Telefone de Contato:</label>
+                            <input type="text" id="service-phone" name="service-phone">
+                        </div>
+                        <div class="form-group">
+                            <label for="service-hours">Horário de Funcionamento:</label>
+                            <input type="text" id="service-hours" name="service-hours">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="service-requirements">Requisitos/Documentos Necessários:</label>
+                        <textarea id="service-requirements" name="service-requirements"></textarea>
+                    </div>
+                    <button type="submit">Cadastrar Serviço</button>
+                </form>
+            </div>
+
+            <div class="services-list">
+                <h3>Serviços Cadastrados</h3>
+                <div id="services-list-content">
+                    <!-- Services list will be displayed here -->
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getFirestore, collection, addDoc, getDocs, query, where, deleteDoc, doc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+    <footer>
+        <div class="container">
+            <p>Central de Serviços Públicos - Facilitando o acesso aos direitos da população de Franca/SP</p>
+        </div>
+    </footer>
 
-        // Configuração do Firebase - SUBSTITUA PELAS SUAS CONFIGURAÇÕES
+    <script>
+        // Initialize Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyC0cK4K7uXFqyrY6ossMmhCnlPENPMc3S4",
             authDomain: "central-de-mapeamento.firebaseapp.com",
@@ -492,800 +509,604 @@
             appId: "1:813023011513:web:817122bff520ca7f5d3168"
         };
 
-        // Inicializar Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
-        // Variáveis globais
-        window.db = db;
-        window.auth = auth;
-        let map;
-        let markers = [];
-        let currentServices = [];
-        let isAdminLoggedIn = false;
-        let userLocation = null;
-        let serviceBeingEdited = null; // Nova variável para rastrear o serviço em edição
+        // Category configuration for map markers
+        const categoryConfig = {
+            saude: { name: 'Saúde', color: '#4CAF50', icon: '🏥' },
+            educacao: { name: 'Educação', color: '#2196F3', icon: '🏫' },
+            'assistencia-social': { name: 'Assistência Social', color: '#FF9800', icon: '🤝' },
+            cultura: { name: 'Cultura', color: '#9C27B0', icon: '🎭' },
+            esporte: { name: 'Esporte e Lazer', color: '#E91E63', icon: '⚽' },
+            seguranca: { name: 'Segurança', color: '#F44336', icon: '👮' },
+            'meio-ambiente': { name: 'Meio Ambiente', color: '#8BC34A', icon: '🌳' },
+            transporte: { name: 'Transporte', color: '#607D8B', icon: '🚌' },
+            outros: { name: 'Outros', color: '#795548', icon: '📌' }
+        };
 
-        // Verificar se está no modo admin pela URL
+        // DOM Elements
         const urlParams = new URLSearchParams(window.location.search);
-        const isAdminView = urlParams.get('view') === 'admin';
-        if (isAdminView) {
-            document.getElementById('admin-panel').classList.add('show');
-            document.querySelector('.tabs').style.display = 'none';
-        }
+        const publicInterface = document.getElementById('public-interface');
+        const adminLogin = document.getElementById('admin-login');
+        const adminPanel = document.getElementById('admin-panel');
+        const errorMessage = document.getElementById('error-message');
+        const neighborhoodSelect = document.getElementById('neighborhood');
+        const serviceTypeSelect = document.getElementById('service-type');
+        const searchBtn = document.getElementById('search-btn');
+        const mapToggleBtn = document.getElementById('map-toggle');
+        const resultsDiv = document.getElementById('results');
+        const loadingDiv = document.getElementById('loading');
+        const mapContainer = document.getElementById('map-container');
+        const mapElement = document.getElementById('map');
+        const loginForm = document.getElementById('login-form');
+        const logoutBtn = document.getElementById('logout-btn');
+        const serviceForm = document.getElementById('service-form');
 
-        // Inicializar mapa
+        // Map variables
+        let map = null;
+        let markers = [];
+        let geocoder = null;
+
+        // Initialize map centered on Franca-SP
         function initMap() {
-            if (map) {
-                map.remove(); // Remove mapa existente se houver
-            }
-
-            // Coordenadas padrão (Franca-SP) - ALTERE para sua cidade
-            let defaultLat = -20.5228;
-            let defaultLng = -47.3831;
-
-            // Se tiver localização do usuário, use ela
-            if (userLocation) {
-                defaultLat = userLocation.lat;
-                defaultLng = userLocation.lng;
-            }
-
-            map = L.map('map').setView([defaultLat, defaultLng], 13);
-
-            // Adicionar camada de tiles do OpenStreetMap
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-                maxZoom: 19
-            }).addTo(map);
-
-            // Forçar redimensionamento do mapa
-            setTimeout(() => {
-                map.invalidateSize();
-            }, 200);
-
-            // Carregar todos os serviços no mapa inicialmente
-            loadAllServicesOnMap();
-        }
-
-        // Carregar todos os serviços no mapa
-        async function loadAllServicesOnMap() {
-            if (!map) return;
-            try {
-                const querySnapshot = await getDocs(collection(db, 'services'));
-                const services = [];
-                querySnapshot.forEach((doc) => {
-                    services.push({ id: doc.id, ...doc.data() });
-                });
-                updateMapMarkers(services);
-                updateMapServicesList(services);
-            } catch (error) {
-                console.error('Erro ao carregar serviços no mapa:', error);
-                // Se Firebase não estiver configurado, adicionar dados de exemplo
-                const exampleServices = getExampleServices();
-                updateMapMarkers(exampleServices);
-                updateMapServicesList(exampleServices);
+            if (!map) {
+                // Create map centered on Franca-SP
+                map = L.map('map').setView([-20.5389, -47.4011], 13);
+                
+                // Add OpenStreetMap tile layer
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(map);
+                
+                // Add geocoder control
+                geocoder = L.Control.geocoder({
+                    defaultMarkGeocode: false
+                }).on('markgeocode', function(e) {
+                    // This function is called when a geocoding result is found
+                    // We don't need to do anything here since we're using geocoding for markers
+                }).addTo(map);
             }
         }
 
-        // Atualizar lista de serviços do mapa
-        function updateMapServicesList(services) {
-            const mapServicesContainer = document.getElementById('map-services');
-            if (services.length === 0) {
-                mapServicesContainer.innerHTML = `
-                    <h3>Serviços no Mapa</h3>
-                    <p>Nenhum serviço encontrado. <a href="#" onclick="addExampleServices()">Adicionar dados de exemplo</a></p>
-                `;
-                return;
-            }
-
-            const servicesByType = {};
-            services.forEach(service => {
-                const type = getServiceTypeLabel(service.type);
-                if (!servicesByType[type]) {
-                    servicesByType[type] = [];
+        // Geocode address to coordinates
+        async function geocodeAddress(address) {
+            return new Promise((resolve, reject) => {
+                if (!geocoder) {
+                    reject(new Error('Geocoder not initialized'));
+                    return;
                 }
-                servicesByType[type].push(service);
-            });
-
-            let html = '<h3>Serviços no Mapa</h3>';
-            Object.keys(servicesByType).forEach(type => {
-                html += `<h4 style="color:#667eea; margin-top: 15px;">${type} (${servicesByType[type].length})</h4>`;
-                servicesByType[type].forEach(service => {
-                    html += `<p style="margin: 5px 0; padding-left: 15px;">• ${service.name} - ${service.neighborhood}</p>`;
-                });
-            });
-
-            mapServicesContainer.innerHTML = html;
-        }
-
-        // Dados de exemplo para quando Firebase não estiver configurado
-        function getExampleServices() {
-            return [
-                {
-                    id: '1',
-                    name: 'UBS Centro',
-                    type: 'saude',
-                    neighborhood: 'centro',
-                    address: 'Rua das Flores, 123, Centro',
-                    phone: '(16) 3333-4444',
-                    hours: 'Segunda a Sexta: 7h às 17h',
-                    description: 'Unidade Básica de Saúde com atendimento geral, vacinação e consultas.',
-                    requirements: 'RG, CPF, Cartão SUS, comprovante de residência'
-                },
-                {
-                    id: '2',
-                    name: 'CRAS Cidade Nova',
-                    type: 'assistencia-social',
-                    neighborhood: 'cidade nova',
-                    address: 'Avenida Brasil, 456, Cidade Nova',
-                    phone: '(16) 3555-6666',
-                    hours: 'Segunda a Sexta: 8h às 16h',
-                    description: 'Centro de Referência de Assistência Social com programas sociais.',
-                    requirements: 'RG, CPF, comprovante de renda e residência'
-                },
-                {
-                    id: '3',
-                    name: 'Escola Municipal Santos Dumont',
-                    type: 'educacao',
-                    neighborhood: 'jardim america',
-                    address: 'Rua da Educação, 789, Jardim América',
-                    phone: '(16) 3777-8888',
-                    hours: 'Segunda a Sexta: 7h às 17h',
-                    description: 'Escola municipal com ensino fundamental e atividades extras.',
-                    requirements: 'Certidão de nascimento, RG dos pais, comprovante de residência'
+                
+                // Add city and state if not present
+                let fullAddress = address;
+                if (!address.toLowerCase().includes('franca') && !address.toLowerCase().includes('sp')) {
+                    fullAddress = `${address}, Franca-SP`;
                 }
-            ];
-        }
-
-        // Adicionar serviços de exemplo
-        window.addExampleServices = function() {
-            const services = getExampleServices();
-            updateMapMarkers(services);
-            updateMapServicesList(services);
-        };
-
-        // Funções globais
-        window.switchTab = function(tab) {
-            // Remover classe active de todas as abas
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
-
-            // Ativar aba selecionada
-            event.target.classList.add('active');
-            document.getElementById(tab + '-tab').style.display = 'block';
-
-            // Inicializar mapa se necessário
-            if (tab === 'map') {
-                if (!map) {
-                    setTimeout(initMap, 100);
-                } else {
-                    // Força redesenho do mapa
-                    setTimeout(() => {
-                        map.invalidateSize();
-                        if (markers.length === 0) {
-                            loadAllServicesOnMap();
+                
+                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data.length > 0) {
+                            resolve({
+                                latitude: parseFloat(data[0].lat),
+                                longitude: parseFloat(data[0].lon),
+                                displayName: data[0].display_name
+                            });
+                        } else {
+                            reject(new Error('Address not found'));
                         }
-                    }, 100);
-                }
-            }
-        };
-
-        // Adicionar estilos CSS para os popups personalizados
-        const customStyles = document.createElement('style');
-        customStyles.textContent = `
-            .custom-popup.leaflet-popup-content-wrapper {
-                border-radius: 10px;
-                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            }
-            .custom-popup.leaflet-popup-content {
-                margin: 15px;
-                line-height: 1.4;
-            }
-            .custom-marker {
-                border: none!important;
-                background: none!important;
-            }
-            .map-container {
-                border: 2px solid #e9ecef;
-            }
-            #map {
-                width: 100%;
-                height: 100%;
-                min-height: 100vh;
-            }
-            .leaflet-container {
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            }
-            .leaflet-popup-content h4 {
-                margin-top: 0;
-            }
-            /* Melhorias para mobile */
-            @media(max-width: 768px) {
-                .map-container {
-                    height: 350px;
-                }
-                .leaflet-popup-content-wrapper {
-                    margin: 5px!important;
-                }
-                .custom-popup.leaflet-popup-content {
-                    margin: 10px;
-                    font-size: 0.9rem;
-                }
-            }
-        `;
-        document.head.appendChild(customStyles);
-
-        window.getCurrentLocation = function() {
-            if (!navigator.geolocation) {
-                alert('Geolocalização não é suportada pelo seu navegador.');
-                return;
-            }
-
-            const locationInfo = document.getElementById('location-info');
-            const locationText = document.getElementById('current-location-text');
-            locationText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Obtendo localização...';
-            locationInfo.classList.add('show');
-
-            navigator.geolocation.getCurrentPosition(async (position) => {
-                const lat = position.coords.latitude;
-                const lng = position.coords.longitude;
-                userLocation = { lat, lng };
-
-                try {
-                    // Usar API de geocoding reverso para obter o bairro
-                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
-                    const data = await response.json();
-                    let neighborhood = data.address?.suburb || data.address?.neighbourhood || data.address?.quarter || 'Localização encontrada';
-                    locationText.innerHTML = `📍 ${neighborhood}, ${data.address?.city || data.address?.town || ''}`;
-
-                    // Buscar serviços automaticamente
-                    document.getElementById('neighborhood-search').value = neighborhood;
-                    searchServices();
-                } catch (error) {
-                    locationText.innerHTML = `📍 Localização encontrada (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
-                    console.error('Erro ao obter endereço:', error);
-                }
-            }, (error) => {
-                locationInfo.classList.remove('show');
-                alert('Não foi possível obter sua localização. Verifique as permissões do navegador.');
-                console.error('Erro de geolocalização:', error);
+                    })
+                    .catch(error => {
+                        console.error('Geocoding error:', error);
+                        reject(error);
+                    });
             });
-        };
-
-        window.searchServices = async function() {
-            const neighborhood = document.getElementById('neighborhood-search').value.trim();
-            const resultsContainer = document.getElementById('services-results');
-
-            if (!neighborhood) {
-                alert('Por favor, digite o nome do bairro.');
-                return;
-            }
-
-            resultsContainer.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Buscando serviços...</p></div>';
-
-            try {
-                const q = query(
-                    collection(db, 'services'),
-                    where('neighborhood', '>=', neighborhood.toLowerCase()),
-                    where('neighborhood', '<=', neighborhood.toLowerCase() + '\uf8ff')
-                );
-
-                const querySnapshot = await getDocs(q);
-                const services = [];
-                querySnapshot.forEach((doc) => {
-                    services.push({ id: doc.id, ...doc.data() });
-                });
-
-                displayServices(services);
-                updateMapMarkers(services);
-            } catch (error) {
-                console.error('Erro ao buscar serviços:', error);
-                resultsContainer.innerHTML = '<div class="no-results"><i class="fas fa-exclamation-circle"></i><h3>Erro ao buscar serviços</h3><p>Tente novamente em alguns instantes.</p></div>';
-            }
-        };
-
-        function displayServices(services) {
-            const resultsContainer = document.getElementById('services-results');
-
-            if (services.length === 0) {
-                resultsContainer.innerHTML = `
-                    <div class="no-results">
-                        <i class="fas fa-search"></i>
-                        <h3>Nenhum serviço encontrado neste bairro</h3>
-                        <p>Tente buscar por um bairro próximo ou verifique a grafia.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            const servicesHtml = services.map(service => `
-                <div class="service-card">
-                    <h3>${service.name}</h3>
-                    <p>${service.description}</p>
-                    <div class="service-info">
-                        <div><i class="fas fa-tag"></i> ${getServiceTypeLabel(service.type)}</div>
-                        <div><i class="fas fa-map-marker-alt"></i> ${service.address}</div>
-                        ${service.phone ? `<div><i class="fas fa-phone"></i> ${service.phone}</div>` : ''}
-                        ${service.hours ? `<div><i class="fas fa-clock"></i> ${service.hours}</div>` : ''}
-                    </div>
-                    ${service.requirements ? `
-                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e9ecef;">
-                            <strong>📋 Documentos/Requisitos:</strong>
-                            <p style="margin-top: 5px; font-size: 0.9rem;">${service.requirements}</p>
-                        </div>
-                    ` : ''}
-                </div>
-            `).join('');
-
-            resultsContainer.innerHTML = `
-                <div class="services-grid">
-                    ${servicesHtml}
-                </div>
-            `;
         }
 
-        function updateMapMarkers(services) {
-            if (!map) return;
-
-            // Limpar marcadores existentes
+        // Update map with services
+        async function updateMap(services) {
+            // Clear existing markers
             markers.forEach(marker => map.removeLayer(marker));
             markers = [];
-            let markersToFit = [];
-
-            // Processar serviços um por vez para evitar limite de API
-            services.forEach((service, index) => {
-                setTimeout(() => {
-                    geocodeAndAddMarker(service, markersToFit, index === services.length - 1);
-                }, index * 200); // Delay entre requisições para evitar rate limiting
-            });
+            
+            if (!services || services.length === 0) {
+                return;
+            }
+            
+            // Calculate bounds to fit all markers
+            const bounds = L.latLngBounds();
+            
+            // Add markers for each service
+            for (const service of services) {
+                try {
+                    let lat = service.latitude;
+                    let lng = service.longitude;
+                    
+                    // If coordinates not available, geocode the address
+                    if (!lat || !lng) {
+                        if (service.address) {
+                            const geocoded = await geocodeAddress(service.address);
+                            lat = geocoded.latitude;
+                            lng = geocoded.longitude;
+                            
+                            // Update the service in Firestore with the coordinates
+                            await db.collection('services').doc(service.id).update({
+                                latitude: lat,
+                                longitude: lng
+                            });
+                        } else {
+                            continue; // Skip if no address
+                        }
+                    }
+                    
+                    const category = categoryConfig[service.category] || categoryConfig.outros;
+                    
+                    // Create custom icon
+                    const iconHtml = `
+                        <div style="
+                            background-color: ${category.color};
+                            width: 36px;
+                            height: 36px;
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            color: white;
+                            font-weight: bold;
+                            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+                            border: 2px solid white;
+                        ">${category.icon}</div>
+                    `;
+                    
+                    const customIcon = L.divIcon({
+                        html: iconHtml,
+                        iconSize: [36, 36],
+                        iconAnchor: [18, 18],
+                        popupAnchor: [0, -18]
+                    });
+                    
+                    // Create marker
+                    const marker = L.marker([lat, lng], {
+                        icon: customIcon
+                    }).addTo(map);
+                    
+                    // Create popup content
+                    let contactInfo = '';
+                    if (service.phone || service.hours) {
+                        contactInfo = `
+                            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee;">
+                                <div style="font-weight: bold; margin-bottom: 5px;">Informações de Contato</div>
+                                ${service.phone ? `<p><strong>Telefone:</strong> <a href="tel:${service.phone.replace(/\D/g, '')}" style="color: #2196F3; text-decoration: none;">${service.phone}</a></p>` : ''}
+                                ${service.hours ? `<p><strong>Horário de Funcionamento:</strong> ${service.hours}</p>` : ''}
+                            </div>
+                        `;
+                    }
+                    
+                    let requirementsInfo = '';
+                    if (service.requirements) {
+                        requirementsInfo = `
+                            <div style="margin-top: 10px;">
+                                <div style="font-weight: bold; margin-bottom: 5px;">Documentos/Requisitos Necessários:</div>
+                                <p>${service.requirements}</p>
+                            </div>
+                        `;
+                    }
+                    
+                    // Bind popup
+                    marker.bindPopup(`
+                        <div style="min-width: 250px; max-width: 300px;">
+                            <h3 style="color: #333; margin: 0 0 10px 0;">${service.name}</h3>
+                            <span style="
+                                display: inline-block;
+                                background-color: ${category.color}20;
+                                color: ${category.color};
+                                padding: 4px 8px;
+                                border-radius: 12px;
+                                font-size: 12px;
+                                font-weight: bold;
+                                margin-bottom: 10px;
+                            ">${category.name}</span>
+                            <div>
+                                <div style="font-weight: bold; margin-bottom: 5px;">Descrição:</div>
+                                <p>${service.description}</p>
+                            </div>
+                            ${requirementsInfo}
+                            <div style="margin-top: 10px;">
+                                <div style="font-weight: bold; margin-bottom: 5px;">Endereço:</div>
+                                <p>${service.address}</p>
+                            </div>
+                            <div style="margin-top: 10px; font-size: 12px; color: #666;">
+                                Bairro: ${service.neighborhood}
+                            </div>
+                            ${contactInfo}
+                        </div>
+                    `);
+                    
+                    // Add marker to array for cleanup
+                    markers.push(marker);
+                    
+                    // Extend bounds to include this marker
+                    bounds.extend([lat, lng]);
+                } catch (error) {
+                    console.error('Error creating marker for service:', service.name, error);
+                    continue;
+                }
+            }
+            
+            // Fit bounds if we have markers
+            if (!bounds.isEmpty()) {
+                map.fitBounds(bounds, {
+                    padding: [50, 50],
+                    maxZoom: 15
+                });
+            }
         }
 
-        async function geocodeAndAddMarker(service, markersToFit, isLast) {
+        // Toggle map visibility
+        mapToggleBtn.addEventListener('click', () => {
+            if (mapContainer.style.display === 'none' || mapContainer.style.display === '') {
+                mapContainer.style.display = 'block';
+                mapToggleBtn.textContent = 'Ocultar Mapa';
+                
+                // Initialize map if not already done
+                if (!map) {
+                    initMap();
+                    // Load all services for map
+                    loadAllServicesForMap();
+                }
+            } else {
+                mapContainer.style.display = 'none';
+                mapToggleBtn.textContent = 'Mostrar Mapa Interativo';
+            }
+        });
+
+        // Load all services for map
+        async function loadAllServicesForMap() {
             try {
-                // Tentar diferentes formatos de endereço para melhor geocoding
-                const addressVariations = [
-                    `${service.address}, Brasil`,
-                    service.address,
-                    `${service.address}, ${service.neighborhood}`,
-                ];
+                const snapshot = await db.collection('services').get();
+                const services = [];
+                
+                snapshot.forEach(doc => {
+                    services.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+                
+                updateMap(services);
+            } catch (error) {
+                console.error('Error loading services for map:', error);
+            }
+        }
 
-                let coordinates = null;
-                for (const address of addressVariations) {
-                    try {
-                        const response = await fetch(
-                            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1&countrycodes=br`,
-                            {
-                                headers: {
-                                    'User-Agent': 'PublicServicesMap/1.0'
-                                }
-                            }
-                        );
-                        const data = await response.json();
-                        if (data.length > 0) {
-                            coordinates = {
-                                lat: parseFloat(data[0].lat),
-                                lng: parseFloat(data[0].lon)
-                            };
-                            break;
-                        }
-                    } catch (error) {
-                        console.log(`Tentativa de geocoding falhou para: ${address}`);
+        // Admin Login
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const password = document.getElementById('admin-password').value;
+            
+            try {
+                // Verificar se o documento de senhas existe
+                const passwordDoc = await db.collection('admin').doc('passwords').get();
+                
+                if (passwordDoc.exists) {
+                    const passwords = passwordDoc.data().passwords || [];
+                    
+                    // Verificar se a senha digitada está na lista
+                    if (passwords.includes(password)) {
+                        // Login successful
+                        adminLogin.style.display = 'none';
+                        adminPanel.style.display = 'block';
+                        loadServicesList();
+                        loadNeighborhoods();
+                    } else {
+                        showError('Senha incorreta. Tente novamente.');
                     }
+                } else {
+                    showError('Erro ao verificar a senha. Contate o administrador.');
                 }
+            } catch (error) {
+                console.error('Error logging in:', error);
+                showError('Erro ao fazer login. Tente novamente mais tarde.');
+            }
+        });
 
-                // Se não conseguiu geocodificar, usar coordenadas aproximadas baseadas no bairro
-                if (!coordinates) {
-                    coordinates = getApproximateCoordinates(service.neighborhood);
+        // Logout
+        logoutBtn.addEventListener('click', () => {
+            adminPanel.style.display = 'none';
+            adminLogin.style.display = 'block';
+            document.getElementById('admin-password').value = '';
+            errorMessage.style.display = 'none';
+        });
+
+        // Load neighborhoods for select
+        async function loadNeighborhoods() {
+            try {
+                const servicesSnapshot = await db.collection('services').get();
+                const neighborhoods = new Set();
+                
+                servicesSnapshot.forEach(doc => {
+                    const service = doc.data();
+                    if (service.neighborhood) {
+                        neighborhoods.add(service.neighborhood);
+                    }
+                });
+                
+                // Clear existing options except the first one
+                while (neighborhoodSelect.options.length > 1) {
+                    neighborhoodSelect.remove(1);
                 }
+                
+                // Add neighborhoods to select
+                neighborhoods.forEach(neighborhood => {
+                    const option = document.createElement('option');
+                    option.value = neighborhood;
+                    option.textContent = neighborhood;
+                    neighborhoodSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading neighborhoods:', error);
+            }
+        }
 
-                if (coordinates) {
-                    // Criar ícone personalizado baseado no tipo de serviço
-                    const icon = getServiceIcon(service.type);
-                    const marker = L.marker([coordinates.lat, coordinates.lng], { icon }).addTo(map);
-
-                    // Popup mais detalhado
-                    const popupContent = `
-                        <div style="min-width: 250px; max-width: 300px;">
-                            <h4 style="margin: 0 0 10px 0; color:#667eea;">${service.name}</h4>
-                            <p style="margin: 5px 0;"><strong>📍 Tipo:</strong> ${getServiceTypeLabel(service.type)}</p>
-                            <p style="margin: 5px 0;"><strong>🏠 Endereço:</strong> ${service.address}</p>
-                            ${service.phone ? `<p style="margin: 5px 0;"><strong>📞 Telefone:</strong> <a href="tel:${service.phone}">${service.phone}</a></p>` : ''}
-                            ${service.hours ? `<p style="margin: 5px 0;"><strong>🕐 Horário:</strong> ${service.hours}</p>` : ''}
-                            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee;">
-                                <p style="font-size: 0.9rem; margin: 0;"><strong>Descrição:</strong></p>
-                                <p style="font-size: 0.9rem; margin: 5px 0 0 0;">${service.description}</p>
-                            </div>
-                            ${service.requirements ? `
-                                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee;">
-                                    <p style="font-size: 0.9rem; margin: 0;"><strong>📋 Documentos necessários:</strong></p>
-                                    <p style="font-size: 0.85rem; margin: 5px 0 0 0; color: #666;">${service.requirements}</p>
-                                </div>
-                            ` : ''}
+        // Search services
+        searchBtn.addEventListener('click', async () => {
+            const selectedNeighborhood = neighborhoodSelect.value;
+            const selectedType = serviceTypeSelect.value;
+            
+            if (!selectedNeighborhood) {
+                alert('Por favor, selecione um bairro.');
+                return;
+            }
+            
+            loadingDiv.style.display = 'block';
+            resultsDiv.innerHTML = '';
+            
+            try {
+                let query = db.collection('services').where('neighborhood', '==', selectedNeighborhood);
+                if (selectedType) {
+                    query = query.where('category', '==', selectedType);
+                }
+                
+                const snapshot = await query.get();
+                const services = [];
+                
+                if (snapshot.empty) {
+                    resultsDiv.innerHTML = `
+                        <div class="no-results">
+                            <h3>Nenhum serviço encontrado</h3>
+                            <p>Não foram encontrados serviços no bairro "${selectedNeighborhood}"${selectedType ? ` para a categoria "${getCategoryName(selectedType)}"` : ''}.</p>
+                            <p>Verifique se selecionou corretamente ou entre em contato com a administração.</p>
                         </div>
                     `;
-
-                    marker.bindPopup(popupContent, {
-                        maxWidth: 300,
-                        className: 'custom-popup'
+                } else {
+                    snapshot.forEach(doc => {
+                        const service = doc.data();
+                        services.push({...service, id: doc.id});
+                        const serviceCard = createServiceCard(service);
+                        resultsDiv.appendChild(serviceCard);
                     });
-
-                    markers.push(marker);
-                    markersToFit.push(marker);
-
-                    // Se for o último marcador, ajustar a visualização
-                    if (isLast && markersToFit.length > 0) {
-                        setTimeout(() => {
-                            const group = new L.featureGroup(markersToFit);
-                            map.fitBounds(group.getBounds().pad(0.1));
-                        }, 500);
+                    
+                    // Update map with filtered services if map is visible
+                    if (mapContainer.style.display === 'block') {
+                        updateMap(services);
                     }
                 }
             } catch (error) {
-                console.error('Erro ao adicionar marcador:', error);
+                console.error('Error searching services:', error);
+                resultsDiv.innerHTML = `
+                    <div class="no-results">
+                        <h3>Erro ao carregar serviços</h3>
+                        <p>Ocorreu um erro ao buscar os serviços. Tente novamente mais tarde.</p>
+                    </div>
+                `;
+            } finally {
+                loadingDiv.style.display = 'none';
             }
-        }
+        });
 
-        // Obter coordenadas aproximadas baseadas no bairro
-        function getApproximateCoordinates(neighborhood) {
-            // Coordenadas aproximadas de alguns bairros (substitua pelos da sua cidade)
-            const neighborhoodCoords = {
-                'centro': { lat: -20.5228, lng: -47.3831 },
-                'cidade nova': { lat: -20.5180, lng: -47.3900 },
-                'jardim america': { lat: -20.5300, lng: -47.3750 },
-                'vila nova': { lat: -20.5150, lng: -47.3950 },
-                'jardim paulista': { lat: -20.5280, lng: -47.3800 },
-                'jardim california': { lat: -20.5320, lng: -47.3700 }
-            };
-
-            const coords = neighborhoodCoords[neighborhood.toLowerCase()];
-            if (coords) {
-                // Adicionar pequena variação para evitar sobreposição
-                return {
-                    lat: coords.lat + (Math.random() - 0.5) * 0.002,
-                    lng: coords.lng + (Math.random() - 0.5) * 0.002
-                };
+        // Create service card for display
+        function createServiceCard(service) {
+            const card = document.createElement('div');
+            card.className = 'service-card';
+            
+            const categoryName = getCategoryName(service.category);
+            const categoryColor = categoryConfig[service.category] ? categoryConfig[service.category].color : '#795548';
+            
+            let contactInfo = '';
+            if (service.phone || service.hours) {
+                contactInfo = `
+                    <div class="contact-info">
+                        <div class="contact-title">Informações de Contato</div>
+                        ${service.phone ? `<p><strong>Telefone:</strong> <a href="tel:${service.phone.replace(/\D/g, '')}" style="color: #2196F3; text-decoration: none;">${service.phone}</a></p>` : ''}
+                        ${service.hours ? `<p><strong>Horário de Funcionamento:</strong> ${service.hours}</p>` : ''}
+                    </div>
+                `;
             }
-
-            // Coordenada padrão se bairro não encontrado
-            return {
-                lat: -20.5228 + (Math.random() - 0.5) * 0.01,
-                lng: -47.3831 + (Math.random() - 0.5) * 0.01
-            };
+            
+            let requirementsInfo = '';
+            if (service.requirements) {
+                requirementsInfo = `
+                    <div class="service-info">
+                        <h4>Documentos/Requisitos Necessários:</h4>
+                        <p>${service.requirements}</p>
+                    </div>
+                `;
+            }
+            
+            card.innerHTML = `
+                <h3 class="service-title">${service.name}</h3>
+                <span class="service-category" style="background-color: ${categoryColor}20; color: ${categoryColor};">${categoryName}</span>
+                <div class="service-info">
+                    <h4>Descrição:</h4>
+                    <p>${service.description}</p>
+                </div>
+                ${requirementsInfo}
+                <div class="service-info">
+                    <h4>Endereço:</h4>
+                    <p>${service.address}</p>
+                </div>
+                ${contactInfo}
+            `;
+            
+            return card;
         }
 
-        // Criar ícones personalizados por tipo de serviço
-        function getServiceIcon(type) {
-            const iconColors = {
-                'saude': '#28a745',
-                'educacao': '#007bff',
-                'assistencia-social': '#fd7e14',
-                'habitacao': '#6f42c1',
-                'trabalho': '#20c997',
-                'cultura': '#e83e8c',
-                'esporte': '#17a2b8',
-                'juridico': '#6c757d',
-                'transporte': '#ffc107',
-                'outro': '#dc3545'
-            };
-
-            const color = iconColors[type] || '#667eea';
-            return L.divIcon({
-                html: `<div style="
-                    background-color: ${color};
-                    border: 2px solid white;
-                    border-radius: 50%;
-                    width: 24px;
-                    height: 24px;
-                    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-                "></div>`,
-                className: 'custom-marker',
-                iconSize: [24, 24],
-                iconAnchor: [12, 12],
-                popupAnchor: [0, -12]
-            });
-        }
-
-        function getServiceTypeLabel(type) {
-            const types = {
+        // Get category name
+        function getCategoryName(categoryKey) {
+            const categories = {
                 'saude': 'Saúde',
                 'educacao': 'Educação',
                 'assistencia-social': 'Assistência Social',
-                'habitacao': 'Habitação',
-                'trabalho': 'Trabalho e Renda',
                 'cultura': 'Cultura',
-                'esporte': 'Esporte',
-                'juridico': 'Jurídico',
+                'esporte': 'Esporte e Lazer',
+                'seguranca': 'Segurança',
+                'meio-ambiente': 'Meio Ambiente',
                 'transporte': 'Transporte',
-                'outro': 'Outro'
+                'outros': 'Outros'
             };
-            return types[type] || type;
+            return categories[categoryKey] || categoryKey;
         }
 
-        // Funções administrativas
-        window.adminLogin = function() {
-            const password = document.getElementById('admin-password').value;
-            // Aqui você deve implementar a lógica de autenticação
-            // Por simplicidade, usando uma senha fixa, mas recomenda-se usar Firebase Auth
-            if (password === 'admin123') { // ALTERE ESTA SENHA
-                isAdminLoggedIn = true;
-                document.getElementById('admin-login').style.display = 'none';
-                document.getElementById('admin-content').classList.add('show');
-                loadAdminServices();
-            } else {
-                alert('Senha incorreta!');
-            }
-        };
-
-        window.adminLogout = function() {
-            isAdminLoggedIn = false;
-            document.getElementById('admin-login').style.display = 'block';
-            document.getElementById('admin-content').classList.remove('show');
-            document.getElementById('admin-password').value = '';
-        };
-
-        window.showAddService = function() {
-            document.getElementById('add-service-form').style.display = 'block';
-            document.getElementById('services-list').style.display = 'none';
-        };
-
-        window.showServicesList = function() {
-            document.getElementById('add-service-form').style.display = 'none';
-            document.getElementById('services-list').style.display = 'block';
-            loadAdminServices();
-        };
-
-        async function loadAdminServices() {
-            const container = document.getElementById('admin-services-container');
-            container.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Carregando serviços...</p></div>';
-
+        // Add new service
+        serviceForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const address = document.getElementById('service-address').value;
+            
+            // Try to geocode the address to get coordinates
+            let latitude = null;
+            let longitude = null;
+            
             try {
-                const querySnapshot = await getDocs(collection(db, 'services'));
-                const services = [];
-                querySnapshot.forEach((doc) => {
-                    services.push({ id: doc.id, ...doc.data() });
-                });
+                const geocoded = await geocodeAddress(address);
+                latitude = geocoded.latitude;
+                longitude = geocoded.longitude;
+            } catch (error) {
+                console.error('Error geocoding address:', error);
+                alert('Não foi possível localizar o endereço fornecido. O serviço será cadastrado sem localização no mapa.');
+            }
+            
+            const serviceData = {
+                name: document.getElementById('service-name').value,
+                category: document.getElementById('service-category').value,
+                neighborhood: document.getElementById('service-neighborhood').value,
+                address: address,
+                description: document.getElementById('service-description').value,
+                phone: document.getElementById('service-phone').value,
+                hours: document.getElementById('service-hours').value,
+                requirements: document.getElementById('service-requirements').value,
+                latitude: latitude,
+                longitude: longitude,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            try {
+                await db.collection('services').add(serviceData);
+                alert('Serviço cadastrado com sucesso!');
+                serviceForm.reset();
+                loadServicesList();
+                loadNeighborhoods();
+                
+                // If map is visible, reload all services to include the new one
+                if (mapContainer.style.display === 'block') {
+                    loadAllServicesForMap();
+                }
+            } catch (error) {
+                console.error('Error adding service:', error);
+                alert('Erro ao cadastrar serviço. Tente novamente.');
+            }
+        });
 
-                if (services.length === 0) {
-                    container.innerHTML = '<p style="text-align: center; color:#666;">Nenhum serviço cadastrado ainda.</p>';
+        // Load services list for admin
+        async function loadServicesList() {
+            const listContent = document.getElementById('services-list-content');
+            listContent.innerHTML = '<p>Carregando serviços...</p>';
+            
+            try {
+                const snapshot = await db.collection('services').orderBy('createdAt', 'desc').get();
+                listContent.innerHTML = '';
+                
+                if (snapshot.empty) {
+                    listContent.innerHTML = '<p>Nenhum serviço cadastrado ainda.</p>';
                     return;
                 }
-
-                const servicesHtml = services.map(service => `
-                    <div class="service-item">
+                
+                snapshot.forEach(doc => {
+                    const service = doc.data();
+                    const serviceItem = document.createElement('div');
+                    serviceItem.className = 'service-list-item';
+                    
+                    const categoryName = getCategoryName(service.category);
+                    
+                    serviceItem.innerHTML = `
                         <div>
-                            <h4>${service.name}</h4>
-                            <p style="margin: 5px 0; color: #666;">${getServiceTypeLabel(service.type)} - ${service.neighborhood}</p>
-                            <small style="color:#888;">${service.address}</small>
+                            <strong>${service.name}</strong> - ${categoryName} (${service.neighborhood})
                         </div>
                         <div class="service-actions">
-                            <button class="btn btn-warning btn-small" onclick="editService('${service.id}')">
-                                <i class="fas fa-edit"></i> Editar
-                            </button>
-                            <button class="btn btn-danger btn-small" onclick="deleteService('${service.id}')">
-                                <i class="fas fa-trash"></i> Excluir
-                            </button>
+                            <button class="edit-btn" data-id="${doc.id}">Editar</button>
+                            <button class="delete-btn" data-id="${doc.id}">Excluir</button>
                         </div>
-                    </div>
-                `).join('');
-
-                container.innerHTML = servicesHtml;
+                    `;
+                    
+                    listContent.appendChild(serviceItem);
+                });
+                
+                // Add event listeners to edit and delete buttons
+                document.querySelectorAll('.edit-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const serviceId = e.target.getAttribute('data-id');
+                        editService(serviceId);
+                    });
+                });
+                
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const serviceId = e.target.getAttribute('data-id');
+                        deleteService(serviceId);
+                    });
+                });
             } catch (error) {
-                console.error('Erro ao carregar serviços:', error);
-                container.innerHTML = '<p style="text-align: center; color:#dc3545;">Erro ao carregar serviços.</p>';
+                console.error('Error loading services list:', error);
+                listContent.innerHTML = '<p>Erro ao carregar serviços. Tente novamente.</p>';
             }
         }
 
-        // Implementação da função de edição
-        window.editService = async function(serviceId) {
-            try {
-                // Buscar o serviço no Firestore
-                const serviceDoc = await getDoc(doc(db, 'services', serviceId));
-                if (!serviceDoc.exists()) {
-                    alert('Serviço não encontrado.');
-                    return;
-                }
+        // Edit service (placeholder function)
+        function editService(serviceId) {
+            alert('Função de edição ainda não implementada. ID do serviço: ' + serviceId);
+        }
 
-                const service = serviceDoc.data();
-
-                // Preencher o formulário com os dados do serviço
-                document.getElementById('service-name').value = service.name || '';
-                document.getElementById('service-type').value = service.type || '';
-                document.getElementById('service-neighborhood').value = service.neighborhood || '';
-                document.getElementById('service-address').value = service.address || '';
-                document.getElementById('service-phone').value = service.phone || '';
-                document.getElementById('service-hours').value = service.hours || '';
-                document.getElementById('service-description').value = service.description || '';
-                document.getElementById('service-requirements').value = service.requirements || '';
-
-                // Armazenar o ID do serviço que está sendo editado
-                serviceBeingEdited = serviceId;
-
-                // Mudar o texto do botão de submit
-                const submitButton = document.querySelector('#service-form button[type="submit"]');
-                submitButton.innerHTML = '<i class="fas fa-sync"></i> Atualizar Serviço';
-
-                // Mostrar o formulário de adição (que agora será usado para edição)
-                showAddService();
-
-                // Rolar a página até o formulário
-                document.getElementById('add-service-form').scrollIntoView({ behavior: 'smooth' });
-            } catch (error) {
-                console.error('Erro ao carregar serviço para edição:', error);
-                alert('Erro ao carregar serviço. Tente novamente.');
-            }
-        };
-
-        window.deleteService = async function(serviceId) {
-            if (confirm('Tem certeza que deseja excluir este serviço?')) {
+        // Delete service
+        async function deleteService(serviceId) {
+            if (confirm('Tem certeza que deseja excluir este serviço? Esta ação não pode ser desfeita.')) {
                 try {
-                    await deleteDoc(doc(db, 'services', serviceId));
-                    loadAdminServices();
+                    await db.collection('services').doc(serviceId).delete();
                     alert('Serviço excluído com sucesso!');
-                } catch (error) {
-                    console.error('Erro ao excluir serviço:', error);
-                    alert('Erro ao excluir serviço.');
-                }
-            }
-        };
-
-        // Formulário de adicionar/editar serviço
-        document.getElementById('service-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if (!isAdminLoggedIn) {
-                alert('Você precisa estar logado para gerenciar serviços.');
-                return;
-            }
-
-            const formData = {
-                name: document.getElementById('service-name').value.trim(),
-                type: document.getElementById('service-type').value.trim(),
-                neighborhood: document.getElementById('service-neighborhood').value.trim().toLowerCase(),
-                address: document.getElementById('service-address').value.trim(),
-                phone: document.getElementById('service-phone').value.trim(),
-                hours: document.getElementById('service-hours').value.trim(),
-                description: document.getElementById('service-description').value.trim(),
-                requirements: document.getElementById('service-requirements').value.trim(),
-                // Se for uma edição, não atualizamos 'createdAt', apenas 'updatedAt'
-                ...(serviceBeingEdited ? { updatedAt: new Date() } : { createdAt: new Date() })
-            };
-
-            // Validação básica
-            if (!formData.name || !formData.type || !formData.neighborhood || !formData.address) {
-                alert('Por favor, preencha todos os campos obrigatórios (Nome, Tipo, Bairro, Endereço).');
-                return;
-            }
-
-            try {
-                if (serviceBeingEdited) {
-                    // Atualizar documento existente
-                    await updateDoc(doc(db, 'services', serviceBeingEdited), formData);
-                    alert('Serviço atualizado com sucesso!');
-                    serviceBeingEdited = null; // Resetar variável
-                    // Voltar o texto do botão para o padrão
-                    const submitButton = document.querySelector('#service-form button[type="submit"]');
-                    submitButton.innerHTML = '<i class="fas fa-save"></i> Salvar Serviço';
-                } else {
-                    // Adicionar novo documento
-                    await addDoc(collection(db, 'services'), formData);
-                    alert('Serviço cadastrado com sucesso!');
-                }
-
-                // Resetar formulário e recarregar lista
-                document.getElementById('service-form').reset();
-                loadAdminServices();
-            } catch (error) {
-                console.error('Erro ao salvar serviço:', error);
-                alert('Erro ao salvar serviço. Tente novamente.');
-            }
-        });
-
-        // Inicialização
-        document.addEventListener('DOMContentLoaded', () => {
-            // Configurar busca por Enter
-            document.getElementById('neighborhood-search').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    searchServices();
-                }
-            });
-
-            // Tentar obter localização automaticamente se não estiver no modo admin
-            if (!isAdminView) {
-                setTimeout(() => {
-                    if (navigator.geolocation) {
-                        navigator.geolocation.getCurrentPosition((position) => {
-                            userLocation = {
-                                lat: position.coords.latitude,
-                                lng: position.coords.longitude
-                            };
-                        });
+                    loadServicesList();
+                    loadNeighborhoods();
+                    
+                    // If map is visible, reload all services
+                    if (mapContainer.style.display === 'block') {
+                        loadAllServicesForMap();
                     }
-                }, 1000);
-            }
-        });
-
-        // Verificação de conectividade com Firebase
-        window.testFirebaseConnection = async function() {
-            try {
-                const testQuery = await getDocs(collection(db, 'services'));
-                console.log('Conexão com Firebase estabelecida com sucesso!');
-                return true;
-            } catch (error) {
-                console.error('Erro de conexão com Firebase:', error);
-                console.log('Verifique suas configurações do Firebase no código.');
-                return false;
-            }
-        };
-
-        // Função para popular dados de exemplo (remover em produção)
-        window.addSampleData = async function() {
-            if (!isAdminLoggedIn) {
-                alert('Faça login no painel administrativo primeiro.');
-                return;
-            }
-
-            const sampleServices = [
-                {
-                    name: 'UBS Centro',
-                    type: 'saude',
-                    neighborhood: 'centro',
-                    address: 'Rua das Flores, 123 - Centro',
-                    phone: '(16) 3333-4444',
-                    hours: 'Segunda a Sexta: 7h às 17h',
-                    description: 'Unidade Básica de Saúde com atendimento geral, vacinação, pré-natal e consultas médicas.',
-                    requirements: 'RG, CPF, Cartão SUS, comprovante de residência',
-                    createdAt: new Date()
-                },
-                {
-                    name: 'CRAS Vila Nova',
-                    type: 'assistencia-social',
-                    neighborhood: 'vila nova',
-                    address: 'Avenida Brasil, 456 - Vila Nova',
-                    phone: '(16) 3555-6666',
-                    hours: 'Segunda a Sexta: 8h às 16h',
-                    description: 'Centro de Referência de Assistência Social oferecendo programas sociais, cadastro único e orientação.',
-                    requirements: 'RG, CPF, comprovante de renda, comprovante de residência',
-                    createdAt: new Date()
-                },
-                {
-                    name: 'Escola Municipal João Silva',
-                    type: 'educacao',
-                    neighborhood: 'jardim america',
-                    address: 'Rua da Educação, 789 - Jardim América',
-                    phone: '(16) 3777-8888',
-                    hours: 'Segunda a Sexta: 7h às 17h',
-                    description: 'Escola municipal com ensino fundamental I e II, oferecendo também atividades extracurriculares.',
-                    requirements: 'Certidão de nascimento, RG dos pais, comprovante de residência, cartão de vacinação',
-                    createdAt: new Date()
+                } catch (error) {
+                    console.error('Error deleting service:', error);
+                    alert('Erro ao excluir serviço. Tente novamente.');
                 }
-            ];
-
-            try {
-                for (const service of sampleServices) {
-                    await addDoc(collection(db, 'services'), service);
-                }
-                alert('Dados de exemplo adicionados com sucesso!');
-                loadAdminServices();
-            } catch (error) {
-                console.error('Erro ao adicionar dados de exemplo:', error);
-                alert('Erro ao adicionar dados de exemplo.');
             }
-        };
-    </script>
-
-    <!-- Instruções de configuração (remover em produção) -->
-    <div id="config-instructions" style="position: fixed; top: 10px; right: 10px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 10px; max-width: 300px; font-size: 0.8rem; z-index: 1000; display: none;">
-        <strong>⚠ Configuração necessária:</strong> <br>
-        1. Configure o Firebase no código <br>
-        2. Altere a senha de admin <br>
-        3. Remova este aviso
-        <button onclick="this.parentElement.style.display='none'" style="float: right; border: none; background: none; font-size: 1.2rem; cursor: pointer;">&times;</button>
-    </div>
-    <script>
-        // Mostrar instruções se Firebase não estiver configurado
-        if (window.location.hostname !== 'localhost') {
-            document.getElementById('config-instructions').style.display = 'block';
         }
+
+        // Show error message
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNeighborhoods();
+        });
     </script>
 </body>
 </html>
