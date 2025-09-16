@@ -434,8 +434,8 @@
     </footer>
 
     <script>
-        // Initialize Firebase
-        const firebaseConfig = {
+    // Initialize Firebase
+    const firebaseConfig = {
             apiKey: "AIzaSyC0cK4K7uXFqyrY6ossMmhCnlPENPMc3S4",
             authDomain: "central-de-mapeamento.firebaseapp.com",
             projectId: "central-de-mapeamento",
@@ -443,337 +443,340 @@
             messagingSenderId: "813023011513",
             appId: "1:813023011513:web:817122bff520ca7f5d3168"
         };
+    
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    
+    // DOM Elements
+    const urlParams = new URLSearchParams(window.location.search);
+    const publicInterface = document.getElementById('public-interface');
+    const adminLogin = document.getElementById('admin-login');
+    const adminPanel = document.getElementById('admin-panel');
+    const errorMessage = document.getElementById('error-message');
+    const neighborhoodSelect = document.getElementById('neighborhood');
+    const serviceTypeSelect = document.getElementById('service-type');
+    const searchBtn = document.getElementById('search-btn');
+    const resultsDiv = document.getElementById('results');
+    const loadingDiv = document.getElementById('loading');
+    const loginForm = document.getElementById('login-form');
+    const logoutBtn = document.getElementById('logout-btn');
+    const serviceForm = document.getElementById('service-form');
+    
+    // Check URL for admin view
+    if (urlParams.get('view') === 'admin') {
+        publicInterface.style.display = 'none';
+        adminLogin.style.display = 'block';
+    }
+    
+    // Admin Login - CORRIGIDO
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const password = document.getElementById('admin-password').value;
         
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        
-        // DOM Elements
-        const urlParams = new URLSearchParams(window.location.search);
-        const publicInterface = document.getElementById('public-interface');
-        const adminLogin = document.getElementById('admin-login');
-        const adminPanel = document.getElementById('admin-panel');
-        const errorMessage = document.getElementById('error-message');
-        const neighborhoodSelect = document.getElementById('neighborhood');
-        const serviceTypeSelect = document.getElementById('service-type');
-        const searchBtn = document.getElementById('search-btn');
-        const resultsDiv = document.getElementById('results');
-        const loadingDiv = document.getElementById('loading');
-        const loginForm = document.getElementById('login-form');
-        const logoutBtn = document.getElementById('logout-btn');
-        const serviceForm = document.getElementById('service-form');
-        
-        // Check URL for admin view
-        if (urlParams.get('view') === 'admin') {
-            publicInterface.style.display = 'none';
-            adminLogin.style.display = 'block';
-        }
-        
-        // Admin Login
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const password = document.getElementById('admin-password').value;
+        try {
+            // Verificar se o documento de senhas existe
+            const passwordDoc = await db.collection('admin').doc('passwords').get();
             
-            try {
-                // Check if password exists in Firebase
-                const passwordDoc = await db.collection('admin').doc('passwords').get();
-                if (passwordDoc.exists) {
-                    const passwords = passwordDoc.data().passwords || [];
-                    if (passwords.includes(password)) {
-                        // Login successful
-                        adminLogin.style.display = 'none';
-                        adminPanel.style.display = 'block';
-                        loadServicesList();
-                        loadNeighborhoods();
-                    } else {
-                        showError('Senha incorreta. Tente novamente.');
-                    }
+            if (passwordDoc.exists) {
+                const passwords = passwordDoc.data().passwords || [];
+                
+                // Verificar se a senha digitada está na lista
+                if (passwords.includes(password)) {
+                    // Login successful
+                    adminLogin.style.display = 'none';
+                    adminPanel.style.display = 'block';
+                    loadServicesList();
+                    loadNeighborhoods();
                 } else {
-                    showError('Erro ao verificar a senha. Contate o administrador.');
+                    showError('Senha incorreta. Tente novamente.');
                 }
-            } catch (error) {
-                console.error('Error logging in:', error);
-                showError('Erro ao fazer login. Tente novamente mais tarde.');
+            } else {
+                showError('Erro ao verificar a senha. Contate o administrador.');
             }
-        });
-        
-        // Logout
-        logoutBtn.addEventListener('click', () => {
-            adminPanel.style.display = 'none';
-            adminLogin.style.display = 'block';
-            document.getElementById('admin-password').value = '';
-            errorMessage.style.display = 'none';
-        });
-        
-        // Load neighborhoods for select
-        async function loadNeighborhoods() {
-            try {
-                const servicesSnapshot = await db.collection('services').get();
-                const neighborhoods = new Set();
-                
-                servicesSnapshot.forEach(doc => {
-                    const service = doc.data();
-                    if (service.neighborhood) {
-                        neighborhoods.add(service.neighborhood);
-                    }
-                });
-                
-                // Clear existing options except the first one
-                while (neighborhoodSelect.options.length > 1) {
-                    neighborhoodSelect.remove(1);
+        } catch (error) {
+            console.error('Error logging in:', error);
+            showError('Erro ao fazer login. Tente novamente mais tarde.');
+        }
+    });
+    
+    // Logout
+    logoutBtn.addEventListener('click', () => {
+        adminPanel.style.display = 'none';
+        adminLogin.style.display = 'block';
+        document.getElementById('admin-password').value = '';
+        errorMessage.style.display = 'none';
+    });
+    
+    // Load neighborhoods for select
+    async function loadNeighborhoods() {
+        try {
+            const servicesSnapshot = await db.collection('services').get();
+            const neighborhoods = new Set();
+            
+            servicesSnapshot.forEach(doc => {
+                const service = doc.data();
+                if (service.neighborhood) {
+                    neighborhoods.add(service.neighborhood);
                 }
-                
-                // Add neighborhoods to select
-                neighborhoods.forEach(neighborhood => {
-                    const option = document.createElement('option');
-                    option.value = neighborhood;
-                    option.textContent = neighborhood;
-                    neighborhoodSelect.appendChild(option);
-                });
-            } catch (error) {
-                console.error('Error loading neighborhoods:', error);
+            });
+            
+            // Clear existing options except the first one
+            while (neighborhoodSelect.options.length > 1) {
+                neighborhoodSelect.remove(1);
             }
+            
+            // Add neighborhoods to select
+            neighborhoods.forEach(neighborhood => {
+                const option = document.createElement('option');
+                option.value = neighborhood;
+                option.textContent = neighborhood;
+                neighborhoodSelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Error loading neighborhoods:', error);
+        }
+    }
+    
+    // Search services
+    searchBtn.addEventListener('click', async () => {
+        const selectedNeighborhood = neighborhoodSelect.value;
+        const selectedType = serviceTypeSelect.value;
+        
+        if (!selectedNeighborhood) {
+            alert('Por favor, selecione um bairro.');
+            return;
         }
         
-        // Search services
-        searchBtn.addEventListener('click', async () => {
-            const selectedNeighborhood = neighborhoodSelect.value;
-            const selectedType = serviceTypeSelect.value;
+        loadingDiv.style.display = 'block';
+        resultsDiv.innerHTML = '';
+        
+        try {
+            let query = db.collection('services').where('neighborhood', '==', selectedNeighborhood);
             
-            if (!selectedNeighborhood) {
-                alert('Por favor, selecione um bairro.');
+            if (selectedType) {
+                query = query.where('category', '==', selectedType);
+            }
+            
+            const snapshot = await query.get();
+            
+            if (snapshot.empty) {
+                resultsDiv.innerHTML = `
+                    <div class="no-results">
+                        <h3>Nenhum serviço encontrado</h3>
+                        <p>Não foram encontrados serviços no bairro "${selectedNeighborhood}"${selectedType ? ` para a categoria "${getCategoryName(selectedType)}"` : ''}.</p>
+                        <p>Verifique se selecionou corretamente ou entre em contato com a administração.</p>
+                    </div>
+                `;
+            } else {
+                snapshot.forEach(doc => {
+                    const service = doc.data();
+                    const serviceCard = createServiceCard(service);
+                    resultsDiv.appendChild(serviceCard);
+                });
+            }
+        } catch (error) {
+            console.error('Error searching services:', error);
+            resultsDiv.innerHTML = `
+                <div class="no-results">
+                    <h3>Erro ao carregar serviços</h3>
+                    <p>Ocorreu um erro ao buscar os serviços. Tente novamente mais tarde.</p>
+                </div>
+            `;
+        } finally {
+            loadingDiv.style.display = 'none';
+        }
+    });
+    
+    // Create service card for display
+    function createServiceCard(service) {
+        const card = document.createElement('div');
+        card.className = 'service-card';
+        
+        const categoryNames = {
+            'saude': 'Saúde',
+            'educacao': 'Educação',
+            'assistencia-social': 'Assistência Social',
+            'cultura': 'Cultura',
+            'esporte': 'Esporte e Lazer',
+            'seguranca': 'Segurança',
+            'meio-ambiente': 'Meio Ambiente',
+            'transporte': 'Transporte',
+            'outros': 'Outros'
+        };
+        
+        const categoryName = categoryNames[service.category] || service.category;
+        
+        let contactInfo = '';
+        if (service.phone || service.hours) {
+            contactInfo = `
+                <div class="contact-info">
+                    <div class="contact-title">Informações de Contato</div>
+                    ${service.phone ? `<p><strong>Telefone:</strong> ${service.phone}</p>` : ''}
+                    ${service.hours ? `<p><strong>Horário de Funcionamento:</strong> ${service.hours}</p>` : ''}
+                </div>
+            `;
+        }
+        
+        let requirementsInfo = '';
+        if (service.requirements) {
+            requirementsInfo = `
+                <div class="service-info">
+                    <h4>Documentos/Requisitos Necessários:</h4>
+                    <p>${service.requirements}</p>
+                </div>
+            `;
+        }
+        
+        card.innerHTML = `
+            <h3 class="service-title">${service.name}</h3>
+            <span class="service-category">${categoryName}</span>
+            <div class="service-info">
+                <h4>Descrição:</h4>
+                <p>${service.description}</p>
+            </div>
+            ${requirementsInfo}
+            <div class="service-info">
+                <h4>Endereço:</h4>
+                <p>${service.address}</p>
+            </div>
+            ${contactInfo}
+        `;
+        
+        return card;
+    }
+    
+    // Get category name
+    function getCategoryName(categoryKey) {
+        const categories = {
+            'saude': 'Saúde',
+            'educacao': 'Educação',
+            'assistencia-social': 'Assistência Social',
+            'cultura': 'Cultura',
+            'esporte': 'Esporte e Lazer',
+            'seguranca': 'Segurança',
+            'meio-ambiente': 'Meio Ambiente',
+            'transporte': 'Transporte',
+            'outros': 'Outros'
+        };
+        return categories[categoryKey] || categoryKey;
+    }
+    
+    // Add new service
+    serviceForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const serviceData = {
+            name: document.getElementById('service-name').value,
+            category: document.getElementById('service-category').value,
+            neighborhood: document.getElementById('service-neighborhood').value,
+            address: document.getElementById('service-address').value,
+            description: document.getElementById('service-description').value,
+            phone: document.getElementById('service-phone').value,
+            hours: document.getElementById('service-hours').value,
+            requirements: document.getElementById('service-requirements').value,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        
+        try {
+            await db.collection('services').add(serviceData);
+            alert('Serviço cadastrado com sucesso!');
+            serviceForm.reset();
+            loadServicesList();
+            loadNeighborhoods();
+        } catch (error) {
+            console.error('Error adding service:', error);
+            alert('Erro ao cadastrar serviço. Tente novamente.');
+        }
+    });
+    
+    // Load services list for admin
+    async function loadServicesList() {
+        const listContent = document.getElementById('services-list-content');
+        listContent.innerHTML = '<p>Carregando serviços...</p>';
+        
+        try {
+            const snapshot = await db.collection('services').orderBy('createdAt', 'desc').get();
+            listContent.innerHTML = '';
+            
+            if (snapshot.empty) {
+                listContent.innerHTML = '<p>Nenhum serviço cadastrado ainda.</p>';
                 return;
             }
             
-            loadingDiv.style.display = 'block';
-            resultsDiv.innerHTML = '';
-            
-            try {
-                let query = db.collection('services').where('neighborhood', '==', selectedNeighborhood);
+            snapshot.forEach(doc => {
+                const service = doc.data();
+                const serviceItem = document.createElement('div');
+                serviceItem.className = 'service-list-item';
                 
-                if (selectedType) {
-                    query = query.where('category', '==', selectedType);
-                }
+                const categoryName = getCategoryName(service.category);
                 
-                const snapshot = await query.get();
-                
-                if (snapshot.empty) {
-                    resultsDiv.innerHTML = `
-                        <div class="no-results">
-                            <h3>Nenhum serviço encontrado</h3>
-                            <p>Não foram encontrados serviços no bairro "${selectedNeighborhood}"${selectedType ? ` para a categoria "${getCategoryName(selectedType)}"` : ''}.</p>
-                            <p>Verifique se selecionou corretamente ou entre em contato com a administração.</p>
-                        </div>
-                    `;
-                } else {
-                    snapshot.forEach(doc => {
-                        const service = doc.data();
-                        const serviceCard = createServiceCard(service);
-                        resultsDiv.appendChild(serviceCard);
-                    });
-                }
-            } catch (error) {
-                console.error('Error searching services:', error);
-                resultsDiv.innerHTML = `
-                    <div class="no-results">
-                        <h3>Erro ao carregar serviços</h3>
-                        <p>Ocorreu um erro ao buscar os serviços. Tente novamente mais tarde.</p>
+                serviceItem.innerHTML = `
+                    <div>
+                        <strong>${service.name}</strong> - ${categoryName} (${service.neighborhood})
+                    </div>
+                    <div class="service-actions">
+                        <button class="edit-btn" data-id="${doc.id}">Editar</button>
+                        <button class="delete-btn" data-id="${doc.id}">Excluir</button>
                     </div>
                 `;
-            } finally {
-                loadingDiv.style.display = 'none';
-            }
-        });
-        
-        // Create service card for display
-        function createServiceCard(service) {
-            const card = document.createElement('div');
-            card.className = 'service-card';
+                
+                listContent.appendChild(serviceItem);
+            });
             
-            const categoryNames = {
-                'saude': 'Saúde',
-                'educacao': 'Educação',
-                'assistencia-social': 'Assistência Social',
-                'cultura': 'Cultura',
-                'esporte': 'Esporte e Lazer',
-                'seguranca': 'Segurança',
-                'meio-ambiente': 'Meio Ambiente',
-                'transporte': 'Transporte',
-                'outros': 'Outros'
-            };
+            // Add event listeners to edit and delete buttons
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const serviceId = e.target.getAttribute('data-id');
+                    editService(serviceId);
+                });
+            });
             
-            const categoryName = categoryNames[service.category] || service.category;
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const serviceId = e.target.getAttribute('data-id');
+                    deleteService(serviceId);
+                });
+            });
             
-            let contactInfo = '';
-            if (service.phone || service.hours) {
-                contactInfo = `
-                    <div class="contact-info">
-                        <div class="contact-title">Informações de Contato</div>
-                        ${service.phone ? `<p><strong>Telefone:</strong> ${service.phone}</p>` : ''}
-                        ${service.hours ? `<p><strong>Horário de Funcionamento:</strong> ${service.hours}</p>` : ''}
-                    </div>
-                `;
-            }
-            
-            let requirementsInfo = '';
-            if (service.requirements) {
-                requirementsInfo = `
-                    <div class="service-info">
-                        <h4>Documentos/Requisitos Necessários:</h4>
-                        <p>${service.requirements}</p>
-                    </div>
-                `;
-            }
-            
-            card.innerHTML = `
-                <h3 class="service-title">${service.name}</h3>
-                <span class="service-category">${categoryName}</span>
-                <div class="service-info">
-                    <h4>Descrição:</h4>
-                    <p>${service.description}</p>
-                </div>
-                ${requirementsInfo}
-                <div class="service-info">
-                    <h4>Endereço:</h4>
-                    <p>${service.address}</p>
-                </div>
-                ${contactInfo}
-            `;
-            
-            return card;
+        } catch (error) {
+            console.error('Error loading services list:', error);
+            listContent.innerHTML = '<p>Erro ao carregar serviços. Tente novamente.</p>';
         }
-        
-        // Get category name
-        function getCategoryName(categoryKey) {
-            const categories = {
-                'saude': 'Saúde',
-                'educacao': 'Educação',
-                'assistencia-social': 'Assistência Social',
-                'cultura': 'Cultura',
-                'esporte': 'Esporte e Lazer',
-                'seguranca': 'Segurança',
-                'meio-ambiente': 'Meio Ambiente',
-                'transporte': 'Transporte',
-                'outros': 'Outros'
-            };
-            return categories[categoryKey] || categoryKey;
-        }
-        
-        // Add new service
-        serviceForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const serviceData = {
-                name: document.getElementById('service-name').value,
-                category: document.getElementById('service-category').value,
-                neighborhood: document.getElementById('service-neighborhood').value,
-                address: document.getElementById('service-address').value,
-                description: document.getElementById('service-description').value,
-                phone: document.getElementById('service-phone').value,
-                hours: document.getElementById('service-hours').value,
-                requirements: document.getElementById('service-requirements').value,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            
+    }
+    
+    // Edit service (placeholder function)
+    function editService(serviceId) {
+        alert('Função de edição ainda não implementada. ID do serviço: ' + serviceId);
+    }
+    
+    // Delete service
+    async function deleteService(serviceId) {
+        if (confirm('Tem certeza que deseja excluir este serviço? Esta ação não pode ser desfeita.')) {
             try {
-                await db.collection('services').add(serviceData);
-                alert('Serviço cadastrado com sucesso!');
-                serviceForm.reset();
+                await db.collection('services').doc(serviceId).delete();
+                alert('Serviço excluído com sucesso!');
                 loadServicesList();
                 loadNeighborhoods();
             } catch (error) {
-                console.error('Error adding service:', error);
-                alert('Erro ao cadastrar serviço. Tente novamente.');
-            }
-        });
-        
-        // Load services list for admin
-        async function loadServicesList() {
-            const listContent = document.getElementById('services-list-content');
-            listContent.innerHTML = '<p>Carregando serviços...</p>';
-            
-            try {
-                const snapshot = await db.collection('services').orderBy('createdAt', 'desc').get();
-                listContent.innerHTML = '';
-                
-                if (snapshot.empty) {
-                    listContent.innerHTML = '<p>Nenhum serviço cadastrado ainda.</p>';
-                    return;
-                }
-                
-                snapshot.forEach(doc => {
-                    const service = doc.data();
-                    const serviceItem = document.createElement('div');
-                    serviceItem.className = 'service-list-item';
-                    
-                    const categoryName = getCategoryName(service.category);
-                    
-                    serviceItem.innerHTML = `
-                        <div>
-                            <strong>${service.name}</strong> - ${categoryName} (${service.neighborhood})
-                        </div>
-                        <div class="service-actions">
-                            <button class="edit-btn" data-id="${doc.id}">Editar</button>
-                            <button class="delete-btn" data-id="${doc.id}">Excluir</button>
-                        </div>
-                    `;
-                    
-                    listContent.appendChild(serviceItem);
-                });
-                
-                // Add event listeners to edit and delete buttons
-                document.querySelectorAll('.edit-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const serviceId = e.target.getAttribute('data-id');
-                        editService(serviceId);
-                    });
-                });
-                
-                document.querySelectorAll('.delete-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const serviceId = e.target.getAttribute('data-id');
-                        deleteService(serviceId);
-                    });
-                });
-                
-            } catch (error) {
-                console.error('Error loading services list:', error);
-                listContent.innerHTML = '<p>Erro ao carregar serviços. Tente novamente.</p>';
+                console.error('Error deleting service:', error);
+                alert('Erro ao excluir serviço. Tente novamente.');
             }
         }
-        
-        // Edit service (placeholder function)
-        function editService(serviceId) {
-            alert('Função de edição ainda não implementada. ID do serviço: ' + serviceId);
-            // In a full implementation, this would open a form with the service data for editing
-        }
-        
-        // Delete service
-        async function deleteService(serviceId) {
-            if (confirm('Tem certeza que deseja excluir este serviço? Esta ação não pode ser desfeita.')) {
-                try {
-                    await db.collection('services').doc(serviceId).delete();
-                    alert('Serviço excluído com sucesso!');
-                    loadServicesList();
-                    loadNeighborhoods();
-                } catch (error) {
-                    console.error('Error deleting service:', error);
-                    alert('Erro ao excluir serviço. Tente novamente.');
-                }
-            }
-        }
-        
-        // Show error message
-        function showError(message) {
-            errorMessage.textContent = message;
-            errorMessage.style.display = 'block';
-        }
-        
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            loadNeighborhoods();
-        });
-    </script>
+    }
+    
+    // Show error message
+    function showError(message) {
+        errorMessage.textContent = message;
+        errorMessage.style.display = 'block';
+    }
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        loadNeighborhoods();
+    });
+</script>
 </body>
 
 </html>
+
