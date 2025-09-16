@@ -635,7 +635,13 @@
         // Update map with services
         async function updateMap(services, mapInstance) {
             // Clear existing markers
-            markers.forEach(marker => mapInstance.removeLayer(marker));
+            if (markers && markers.length > 0) {
+                markers.forEach(marker => {
+                    if (mapInstance.hasLayer(marker)) {
+                        mapInstance.removeLayer(marker);
+                    }
+                });
+            }
             markers = [];
             
             if (!services || services.length === 0) {
@@ -644,6 +650,7 @@
             
             // Calculate bounds to fit all markers
             const bounds = L.latLngBounds();
+            let hasValidMarkers = false;
             
             // Add markers for each service
             for (const service of services) {
@@ -758,6 +765,7 @@
                     
                     // Add marker to array for cleanup
                     markers.push(marker);
+                    hasValidMarkers = true;
                     
                     // Extend bounds to include this marker
                     bounds.extend([lat, lng]);
@@ -768,7 +776,7 @@
             }
             
             // Fit bounds if we have markers
-            if (markers.length > 0 && !bounds.isEmpty()) {
+            if (hasValidMarkers && !bounds.isEmpty()) {
                 mapInstance.fitBounds(bounds, {
                     padding: [50, 50],
                     maxZoom: 15
@@ -838,34 +846,38 @@
             
             // Initialize map in fullscreen mode
             const fullscreenMapElement = document.getElementById('fullscreen-map');
-            const fullscreenMapInstance = initMap(fullscreenMapElement);
             
-            // Load all services for map
-            loadAllServicesForMap(fullscreenMapInstance);
-            
-            // Close button event
-            document.getElementById('fullscreen-map-close').addEventListener('click', () => {
-                document.body.removeChild(fullscreenMap);
-                fullscreenMap = null;
-                map = null;
-                markers = [];
-            });
-            
-            // Legend toggle event
-            document.getElementById('fullscreen-legend-toggle').addEventListener('click', () => {
-                const legend = document.getElementById('fullscreen-legend');
-                const toggleBtn = document.getElementById('fullscreen-legend-toggle');
+            // Wait for the element to be added to DOM
+            setTimeout(() => {
+                const fullscreenMapInstance = initMap(fullscreenMapElement);
                 
-                if (legendCollapsed) {
-                    legend.classList.remove('collapsed');
-                    toggleBtn.textContent = '▼ Ocultar Legenda';
-                    legendCollapsed = false;
-                } else {
-                    legend.classList.add('collapsed');
-                    toggleBtn.textContent = '▶ Mostrar Legenda';
-                    legendCollapsed = true;
-                }
-            });
+                // Load all services for map
+                loadAllServicesForMap(fullscreenMapInstance);
+                
+                // Close button event
+                document.getElementById('fullscreen-map-close').addEventListener('click', () => {
+                    document.body.removeChild(fullscreenMap);
+                    fullscreenMap = null;
+                    map = null;
+                    markers = [];
+                });
+                
+                // Legend toggle event
+                document.getElementById('fullscreen-legend-toggle').addEventListener('click', () => {
+                    const legend = document.getElementById('fullscreen-legend');
+                    const toggleBtn = document.getElementById('fullscreen-legend-toggle');
+                    
+                    if (legendCollapsed) {
+                        legend.classList.remove('collapsed');
+                        toggleBtn.textContent = '▼ Ocultar Legenda';
+                        legendCollapsed = false;
+                    } else {
+                        legend.classList.add('collapsed');
+                        toggleBtn.textContent = '▶ Mostrar Legenda';
+                        legendCollapsed = true;
+                    }
+                });
+            }, 100);
         }
         
         // Toggle map visibility (now opens in fullscreen)
@@ -886,9 +898,16 @@
                     });
                 });
                 
-                updateMap(services, mapInstance);
+                await updateMap(services, mapInstance);
             } catch (error) {
                 console.error('Error loading services for map:', error);
+                // Show error message on map
+                if (mapInstance) {
+                    L.popup()
+                        .setLatLng([-20.5389, -47.4011])
+                        .setContent('<div style="padding: 15px; min-width: 250px;"><h3>Erro ao carregar serviços</h3><p>Não foi possível carregar os serviços no mapa. Tente novamente mais tarde.</p></div>')
+                        .openOn(mapInstance);
+                }
             }
         }
         
