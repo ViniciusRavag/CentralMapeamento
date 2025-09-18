@@ -304,6 +304,72 @@
                 height: 300px;
             }
         }
+
+        /* Fullscreen Map Styles */
+        .fullscreen-map-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 9999;
+            background-color: white;
+            display: none;
+        }
+        .fullscreen-map-header {
+            background: linear-gradient(135deg, #1e5799, #207cca);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .fullscreen-map-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        .close-map-btn {
+            background: #d32f2f;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .fullscreen-map-content {
+            height: calc(100vh - 60px);
+            width: 100%;
+        }
+        .fullscreen-map-legend {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            max-height: 250px;
+            overflow-y: auto;
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            width: 220px;
+        }
+        @media (max-width: 768px) {
+            .fullscreen-map-title {
+                font-size: 1.3rem;
+            }
+            .fullscreen-map-legend {
+                width: 180px;
+                font-size: 11px;
+            }
+            .legend-color {
+                width: 18px;
+                height: 18px;
+                font-size: 10px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -313,7 +379,6 @@
             <p class="subtitle">Encontre serviços, programas e recursos públicos em toda a cidade</p>
         </div>
     </header>
-
     <div class="container">
         <!-- Public Interface -->
         <div id="public-interface">
@@ -345,11 +410,9 @@
                     <button id="map-toggle" class="map-toggle">Mostrar Mapa</button>
                 </div>
             </section>
-
             <div id="loading" class="loading" style="display: none;">
                 Carregando serviços...
             </div>
-
             <div id="map-container">
                 <h2>Mapa de Serviços Sociais - Franca/SP</h2>
                 <div id="map"></div>
@@ -399,12 +462,10 @@
                     <p>• Toque nos marcadores em dispositivos móveis para ver informações</p>
                 </div>
             </div>
-
             <div id="results" class="results">
                 <!-- Results will be displayed here -->
             </div>
         </div>
-
         <!-- Admin Login -->
         <div id="admin-login" style="display: none;">
             <div class="admin-login">
@@ -419,14 +480,12 @@
                 </form>
             </div>
         </div>
-
         <!-- Admin Panel -->
         <div id="admin-panel" class="admin-panel">
             <div class="admin-header">
                 <h2>Gerenciamento de Serviços</h2>
                 <button id="logout-btn" class="logout-btn">Sair</button>
             </div>
-
             <div class="add-service-form">
                 <h3>Adicionar Novo Serviço</h3>
                 <form id="service-form">
@@ -482,7 +541,6 @@
                     <button type="submit">Cadastrar Serviço</button>
                 </form>
             </div>
-
             <div class="services-list">
                 <h3>Serviços Cadastrados</h3>
                 <div id="services-list-content">
@@ -492,12 +550,63 @@
         </div>
     </div>
 
+    <!-- Fullscreen Map Container -->
+    <div id="fullscreen-map" class="fullscreen-map-container">
+        <div class="fullscreen-map-header">
+            <h2 class="fullscreen-map-title">Mapa de Serviços Sociais - Franca/SP</h2>
+            <button id="close-fullscreen-map" class="close-map-btn">Fechar Mapa</button>
+        </div>
+        <div class="fullscreen-map-content" id="fullscreen-map-content"></div>
+        <div class="fullscreen-map-legend" id="fullscreen-map-legend">
+            <h4>Legenda:</h4>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #4CAF50;">🏥</div>
+                <span>Saúde</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #2196F3;">🏫</div>
+                <span>Educação</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FF9800;">🤝</div>
+                <span>Assistência Social</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #9C27B0;">🎭</div>
+                <span>Cultura</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #E91E63;">⚽</div>
+                <span>Esporte e Lazer</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #F44336;">👮</div>
+                <span>Segurança</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #8BC34A;">🌳</div>
+                <span>Meio Ambiente</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #607D8B;">🚌</div>
+                <span>Transporte</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #795548;">📌</div>
+                <span>Outros</span>
+            </div>
+            <div style="margin-top: 15px; font-size: 12px; color: #666;">
+                <p>• Toque nos marcadores para ver detalhes</p>
+                <p>• Use os filtros na página anterior</p>
+            </div>
+        </div>
+    </div>
+
     <footer>
         <div class="container">
             <p>Central de Serviços Públicos - Facilitando o acesso aos direitos da população de Franca/SP</p>
         </div>
     </footer>
-
     <script>
         // Initialize Firebase
         const firebaseConfig = {
@@ -508,13 +617,11 @@
             messagingSenderId: "813023011513",
             appId: "1:813023011513:web:817122bff520ca7f5d3168"
         };
-
         // Initialize Firebase
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
         const db = firebase.firestore();
-
         // Category configuration for map markers
         const categoryConfig = {
             saude: { name: 'Saúde', color: '#4CAF50', icon: '🏥' },
@@ -527,7 +634,6 @@
             transporte: { name: 'Transporte', color: '#607D8B', icon: '🚌' },
             outros: { name: 'Outros', color: '#795548', icon: '📌' }
         };
-
         // DOM Elements
         const urlParams = new URLSearchParams(window.location.search);
         const publicInterface = document.getElementById('public-interface');
@@ -545,30 +651,43 @@
         const loginForm = document.getElementById('login-form');
         const logoutBtn = document.getElementById('logout-btn');
         const serviceForm = document.getElementById('service-form');
-
+        
+        // Fullscreen map elements
+        const fullscreenMap = document.getElementById('fullscreen-map');
+        const fullscreenMapContent = document.getElementById('fullscreen-map-content');
+        const closeFullscreenMapBtn = document.getElementById('close-fullscreen-map');
+        
         // Map variables
         let map = null;
+        let fullscreenMapInstance = null;
         let markers = [];
-
+        let fullscreenMarkers = [];
+        
         // Check URL for admin view
         if (urlParams.get('view') === 'admin') {
             publicInterface.style.display = 'none';
             adminLogin.style.display = 'block';
         }
-
+        
         // Initialize map centered on Franca-SP
-        function initMap() {
-            if (!map) {
-                // Create map centered on Franca-SP
-                map = L.map('map').setView([-20.5389, -47.4011], 13);
-                
-                // Add OpenStreetMap tile layer
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                }).addTo(map);
+        function initMap(containerId) {
+            const container = containerId === 'fullscreen-map-content' ? fullscreenMapContent : mapElement;
+            const mapInstance = L.map(container).setView([-20.5389, -47.4011], 13);
+            
+            // Add OpenStreetMap tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(mapInstance);
+            
+            if (containerId === 'fullscreen-map-content') {
+                fullscreenMapInstance = mapInstance;
+            } else {
+                map = mapInstance;
             }
+            
+            return mapInstance;
         }
-
+        
         // Geocode address to coordinates
         async function geocodeAddress(address) {
             return new Promise((resolve, reject) => {
@@ -577,7 +696,6 @@
                 if (!address.toLowerCase().includes('franca') && !address.toLowerCase().includes('sp')) {
                     fullAddress = `${address}, Franca-SP`;
                 }
-                
                 fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}`)
                     .then(response => response.json())
                     .then(data => {
@@ -597,12 +715,15 @@
                     });
             });
         }
-
+        
         // Update map with services
-        async function updateMap(services) {
+        async function updateMap(services, isFullscreen = false) {
+            const currentMap = isFullscreen ? fullscreenMapInstance : map;
+            const currentMarkers = isFullscreen ? fullscreenMarkers : markers;
+            
             // Clear existing markers
-            markers.forEach(marker => map.removeLayer(marker));
-            markers = [];
+            currentMarkers.forEach(marker => currentMap.removeLayer(marker));
+            currentMarkers.length = 0;
             
             if (!services || services.length === 0) {
                 return;
@@ -624,7 +745,6 @@
                                 const geocoded = await geocodeAddress(service.address);
                                 lat = geocoded.latitude;
                                 lng = geocoded.longitude;
-                                
                                 // Update the service in Firestore with the coordinates
                                 await db.collection('services').doc(service.id).update({
                                     latitude: lat,
@@ -668,7 +788,7 @@
                     // Create marker
                     const marker = L.marker([lat, lng], {
                         icon: customIcon
-                    }).addTo(map);
+                    }).addTo(currentMap);
                     
                     // Create popup content
                     let contactInfo = '';
@@ -723,7 +843,7 @@
                     `);
                     
                     // Add marker to array for cleanup
-                    markers.push(marker);
+                    currentMarkers.push(marker);
                     
                     // Extend bounds to include this marker
                     bounds.extend([lat, lng]);
@@ -734,67 +854,86 @@
             }
             
             // Fit bounds if we have markers
-            if (markers.length > 0 && !bounds.isEmpty()) {
-                map.fitBounds(bounds, {
+            if (currentMarkers.length > 0 && !bounds.isEmpty()) {
+                currentMap.fitBounds(bounds, {
                     padding: [50, 50],
                     maxZoom: 15
                 });
             } else {
                 // If no markers, center on Franca-SP
-                map.setView([-20.5389, -47.4011], 13);
+                currentMap.setView([-20.5389, -47.4011], 13);
             }
         }
-
-        // Toggle map visibility
-        mapToggleBtn.addEventListener('click', () => {
-            if (mapContainer.style.display === 'none' || mapContainer.style.display === '') {
-                mapContainer.style.display = 'block';
-                mapToggleBtn.textContent = 'Ocultar Mapa';
-                
-                // Initialize map if not already done
-                if (!map) {
-                    initMap();
-                }
-                
-                // Load all services for map
-                loadAllServicesForMap();
-            } else {
-                mapContainer.style.display = 'none';
-                mapToggleBtn.textContent = 'Mostrar Mapa Interativo';
+        
+        // Toggle map visibility - now opens fullscreen map
+        mapToggleBtn.addEventListener('click', async () => {
+            // Show fullscreen map
+            fullscreenMap.style.display = 'block';
+            
+            // Initialize fullscreen map if not already done
+            if (!fullscreenMapInstance) {
+                initMap('fullscreen-map-content');
             }
-        });
-
-        // Load all services for map
-        async function loadAllServicesForMap() {
+            
+            // Load all services for map
             try {
                 const snapshot = await db.collection('services').get();
                 const services = [];
-                
                 snapshot.forEach(doc => {
                     services.push({
                         id: doc.id,
                         ...doc.data()
                     });
                 });
-                
+                updateMap(services, true);
+            } catch (error) {
+                console.error('Error loading services for fullscreen map:', error);
+            }
+            
+            // Prevent scrolling on body when fullscreen map is open
+            document.body.style.overflow = 'hidden';
+        });
+        
+        // Close fullscreen map
+        closeFullscreenMapBtn.addEventListener('click', () => {
+            fullscreenMap.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        });
+        
+        // Close fullscreen map when pressing Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && fullscreenMap.style.display === 'block') {
+                fullscreenMap.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        });
+        
+        // Load all services for map (for embedded map - kept for compatibility)
+        async function loadAllServicesForMap() {
+            try {
+                const snapshot = await db.collection('services').get();
+                const services = [];
+                snapshot.forEach(doc => {
+                    services.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
                 updateMap(services);
             } catch (error) {
                 console.error('Error loading services for map:', error);
             }
         }
-
+        
         // Admin Login
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const password = document.getElementById('admin-password').value;
-            
             try {
                 // Verificar se o documento de senhas existe
                 const passwordDoc = await db.collection('admin').doc('passwords').get();
-                
                 if (passwordDoc.exists) {
                     const passwords = passwordDoc.data().passwords || [];
-                    
                     // Verificar se a senha digitada está na lista
                     if (passwords.includes(password)) {
                         // Login successful
@@ -813,7 +952,7 @@
                 showError('Erro ao fazer login. Tente novamente mais tarde.');
             }
         });
-
+        
         // Logout
         logoutBtn.addEventListener('click', () => {
             adminPanel.style.display = 'none';
@@ -821,25 +960,22 @@
             document.getElementById('admin-password').value = '';
             errorMessage.style.display = 'none';
         });
-
+        
         // Load neighborhoods for select
         async function loadNeighborhoods() {
             try {
                 const servicesSnapshot = await db.collection('services').get();
                 const neighborhoods = new Set();
-                
                 servicesSnapshot.forEach(doc => {
                     const service = doc.data();
                     if (service.neighborhood) {
                         neighborhoods.add(service.neighborhood);
                     }
                 });
-                
                 // Clear existing options except the first one
                 while (neighborhoodSelect.options.length > 1) {
                     neighborhoodSelect.remove(1);
                 }
-                
                 // Add neighborhoods to select
                 neighborhoods.forEach(neighborhood => {
                     const option = document.createElement('option');
@@ -851,29 +987,24 @@
                 console.error('Error loading neighborhoods:', error);
             }
         }
-
+        
         // Search services
         searchBtn.addEventListener('click', async () => {
             const selectedNeighborhood = neighborhoodSelect.value;
             const selectedType = serviceTypeSelect.value;
-            
             if (!selectedNeighborhood) {
                 alert('Por favor, selecione um bairro.');
                 return;
             }
-            
             loadingDiv.style.display = 'block';
             resultsDiv.innerHTML = '';
-            
             try {
                 let query = db.collection('services').where('neighborhood', '==', selectedNeighborhood);
                 if (selectedType) {
                     query = query.where('category', '==', selectedType);
                 }
-                
                 const snapshot = await query.get();
                 const services = [];
-                
                 if (snapshot.empty) {
                     resultsDiv.innerHTML = `
                         <div class="no-results">
@@ -892,11 +1023,6 @@
                         const serviceCard = createServiceCard(service);
                         resultsDiv.appendChild(serviceCard);
                     });
-                    
-                    // Update map with filtered services if map is visible
-                    if (mapContainer.style.display === 'block') {
-                        updateMap(services);
-                    }
                 }
             } catch (error) {
                 console.error('Error searching services:', error);
@@ -910,15 +1036,13 @@
                 loadingDiv.style.display = 'none';
             }
         });
-
+        
         // Create service card for display
         function createServiceCard(service) {
             const card = document.createElement('div');
             card.className = 'service-card';
-            
             const categoryName = getCategoryName(service.category);
             const category = categoryConfig[service.category] || categoryConfig.outros;
-            
             let contactInfo = '';
             if (service.phone || service.hours) {
                 contactInfo = `
@@ -929,7 +1053,6 @@
                     </div>
                 `;
             }
-            
             let requirementsInfo = '';
             if (service.requirements) {
                 requirementsInfo = `
@@ -939,7 +1062,6 @@
                     </div>
                 `;
             }
-            
             card.innerHTML = `
                 <h3 class="service-title">${service.name}</h3>
                 <span class="service-category" style="background-color: ${category.color}20; color: ${category.color};">${categoryName}</span>
@@ -954,10 +1076,9 @@
                 </div>
                 ${contactInfo}
             `;
-            
             return card;
         }
-
+        
         // Get category name
         function getCategoryName(categoryKey) {
             const categories = {
@@ -973,17 +1094,14 @@
             };
             return categories[categoryKey] || categoryKey;
         }
-
+        
         // Add new service
         serviceForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
             const address = document.getElementById('service-address').value;
-            
             // Try to geocode the address to get coordinates
             let latitude = null;
             let longitude = null;
-            
             try {
                 const geocoded = await geocodeAddress(address);
                 latitude = geocoded.latitude;
@@ -992,7 +1110,6 @@
                 console.error('Error geocoding address:', error);
                 alert('Não foi possível localizar o endereço fornecido. O serviço será cadastrado sem localização no mapa.');
             }
-            
             const serviceData = {
                 name: document.getElementById('service-name').value,
                 category: document.getElementById('service-category').value,
@@ -1006,45 +1123,34 @@
                 longitude: longitude,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             };
-            
             try {
                 const docRef = await db.collection('services').add(serviceData);
                 alert('Serviço cadastrado com sucesso!');
                 serviceForm.reset();
                 loadServicesList();
                 loadNeighborhoods();
-                
-                // If map is visible, reload all services to include the new one
-                if (mapContainer.style.display === 'block') {
-                    loadAllServicesForMap();
-                }
             } catch (error) {
                 console.error('Error adding service:', error);
                 alert('Erro ao cadastrar serviço. Tente novamente.');
             }
         });
-
+        
         // Load services list for admin
         async function loadServicesList() {
             const listContent = document.getElementById('services-list-content');
             listContent.innerHTML = '<p>Carregando serviços...</p>';
-            
             try {
                 const snapshot = await db.collection('services').orderBy('createdAt', 'desc').get();
                 listContent.innerHTML = '';
-                
                 if (snapshot.empty) {
                     listContent.innerHTML = '<p>Nenhum serviço cadastrado ainda.</p>';
                     return;
                 }
-                
                 snapshot.forEach(doc => {
                     const service = doc.data();
                     const serviceItem = document.createElement('div');
                     serviceItem.className = 'service-list-item';
-                    
                     const categoryName = getCategoryName(service.category);
-                    
                     serviceItem.innerHTML = `
                         <div>
                             <strong>${service.name}</strong> - ${categoryName} (${service.neighborhood})
@@ -1054,10 +1160,8 @@
                             <button class="delete-btn" data-id="${doc.id}">Excluir</button>
                         </div>
                     `;
-                    
                     listContent.appendChild(serviceItem);
                 });
-                
                 // Add event listeners to edit and delete buttons
                 document.querySelectorAll('.edit-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
@@ -1065,7 +1169,6 @@
                         editService(serviceId);
                     });
                 });
-                
                 document.querySelectorAll('.delete-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         const serviceId = e.target.getAttribute('data-id');
@@ -1077,12 +1180,12 @@
                 listContent.innerHTML = '<p>Erro ao carregar serviços. Tente novamente.</p>';
             }
         }
-
+        
         // Edit service (placeholder function)
         function editService(serviceId) {
             alert('Função de edição ainda não implementada. ID do serviço: ' + serviceId);
         }
-
+        
         // Delete service
         async function deleteService(serviceId) {
             if (confirm('Tem certeza que deseja excluir este serviço? Esta ação não pode ser desfeita.')) {
@@ -1091,29 +1194,23 @@
                     alert('Serviço excluído com sucesso!');
                     loadServicesList();
                     loadNeighborhoods();
-                    
-                    // If map is visible, reload all services
-                    if (mapContainer.style.display === 'block') {
-                        loadAllServicesForMap();
-                    }
                 } catch (error) {
                     console.error('Error deleting service:', error);
                     alert('Erro ao excluir serviço. Tente novamente.');
                 }
             }
         }
-
+        
         // Show error message
         function showError(message) {
             errorMessage.textContent = message;
             errorMessage.style.display = 'block';
         }
-
+        
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             loadNeighborhoods();
         });
     </script>
 </body>
-    </html>
-
+</html>
